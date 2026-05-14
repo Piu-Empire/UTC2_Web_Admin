@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ─────────────────────────────────────────────── */
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* ─── Card ─────────────────────────────────────────────── */
+.card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15,23,42,0.06), 0 1px 2px rgba(15,23,42,0.04);
+}
+
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-hover:hover {
+  box-shadow: 0 8px 24px rgba(15,23,42,0.10);
+  transform: translateY(-2px);
+}
+
+/* ─── Sidebar nav item ─────────────────────────────────── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+}
+.nav-item:hover  { background: #f1f5f9; color: #0f172a; }
+.nav-item.active { background: #eff6ff; color: #2563eb; }
+.nav-item.active .nav-icon { color: #2563eb; }
+
+/* ─── Status badge ─────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-error   { background: #fee2e2; color: #991b1b; }
+.badge-info    { background: #dbeafe; color: #1e40af; }
+.badge-neutral { background: #f1f5f9; color: #475569; }
+
+/* ─── Drop zone ────────────────────────────────────────── */
+.dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  background: #f8fafc;
+  transition: border-color 0.2s, background 0.2s;
+}
+.dropzone.active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* ─── Skeleton shimmer ─────────────────────────────────── */
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+
+/* ─── Modal animate-in ─────────────────────────────────── */
+@keyframes animate-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);   }
+}
+.animate-in { animation: animate-in 0.2s ease-out; }
+
+/* ─── Scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+
+/* ─── Dark mode overrides ──────────────────────────────── */
+.dark body               { background: #0f172a; color: #f1f5f9; }
+.dark .card              { background: #1e293b; border-color: #334155; }
+.dark .nav-item          { color: #94a3b8; }
+.dark .nav-item:hover    { background: #1e293b; color: #f1f5f9; }
+.dark .nav-item.active   { background: #1e3a8a; color: #93c5fd; }
+.dark .skeleton {
+  background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+  background-size: 400px 100%;
+}
+.dark .dropzone          { border-color: #475569; background: #1e293b; }
+.dark .dropzone.active   { border-color: #3b82f6; background: #1e3a8a33; }
