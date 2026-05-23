@@ -10,6 +10,7 @@ import ImportEnrollmentPage from '../pages/import/ImportEnrollmentPage';
 import ImportSchedulePage   from '../pages/import/ImportSchedulePage';
 import ImportFeePage        from '../pages/import/ImportFeePage';
 import ImportCurriculumPage from '../pages/import/ImportCurriculumPage';
+import ImportProfilePage    from '../pages/import/ImportProfilePage';
 import StudentListPage      from '../pages/students/StudentListPage';
 import StudentDetailPage    from '../pages/students/StudentDetailPage';
 import NotificationPage     from '../pages/NotificationPage';
@@ -46,6 +47,7 @@ export default function AppRouter() {
             <Route path="schedules"   element={<ImportSchedulePage />} />
             <Route path="fees"        element={<ImportFeePage />} />
             <Route path="curriculum"  element={<ImportCurriculumPage />} />
+            <Route path="profiles"    element={<ImportProfilePage />} />
           </Route>
 
           <Route path="students">

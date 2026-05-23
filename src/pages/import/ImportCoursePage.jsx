@@ -1,4 +1,4 @@
-// src/pages/import/ImportCoursePage.jsx (ghi đè placeholder)
+// src/pages/import/ImportCoursePage.jsx
 import GenericImportPage from '../../components/import/GenericImportPage';
 
 const REQUIRED_COLS = ['course_code', 'course_name', 'credits'];

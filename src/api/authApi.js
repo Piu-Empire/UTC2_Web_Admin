@@ -1,7 +1,12 @@
 import client from './axiosClient';
 
 export const authApi = {
-  // Response shape: { code, message, data: { token, role, name } }
-  login: (email, password) =>
-    client.post('/auth/login', { email, password }),
+    /**
+     * POST /api/v1/auth/login
+     * Backend nhận { studentCode, password } — MSSV thuần (VD: 2211020001)
+     * Backend trả  { accessToken, tokenType, email, studentCode }
+     * Bọc trong ApiResponse: { code, message, data: {...} }
+     */
+    login: (studentCode, password) =>
+        client.post('/auth/login', { studentCode, password }),
 };
