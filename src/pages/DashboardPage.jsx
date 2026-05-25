@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Bell, MessageSquare, ClipboardList,
-  BookOpen, CalendarDays, Wallet, GraduationCap, FileSpreadsheet,
+  BookOpen, CalendarDays, Wallet, GraduationCap, FileSpreadsheet, UserRound,
 } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Badge    from '../components/common/Badge';
@@ -43,6 +43,7 @@ const STAT_CARDS = [
 
 const IMPORTS = [
   { to: '/import/students',    Icon: Users,           title: 'Sinh viên',       sub: 'USER + STUDENT_PROFILE' },
+  { to: '/import/profiles',    Icon: UserRound,       title: 'Cập nhật Profile', sub: 'STUDENT_PROFILE'        },
   { to: '/import/courses',     Icon: BookOpen,        title: 'Học phần',        sub: 'COURSE'                 },
   { to: '/import/enrollments', Icon: FileSpreadsheet, title: 'Đăng ký & Điểm', sub: 'ENROLLMENT'             },
   { to: '/import/schedules',   Icon: CalendarDays,    title: 'Thời khóa biểu', sub: 'SCHEDULE'               },
