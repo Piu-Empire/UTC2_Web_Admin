@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/LoginPage';
 
-// Pages — lazy stubs (replaced in later steps)
 import DashboardPage        from '../pages/DashboardPage';
 import ImportStudentPage    from '../pages/import/ImportStudentPage';
 import ImportCoursePage     from '../pages/import/ImportCoursePage';
@@ -16,10 +15,14 @@ import StudentDetailPage    from '../pages/students/StudentDetailPage';
 import NotificationPage     from '../pages/NotificationPage';
 import FeedbackPage         from '../pages/FeedbackPage';
 import ServiceRequestPage   from '../pages/ServiceRequestPage';
-import AcademicPage         from '../pages/academic/AcademicPage';
-import AssessmentPage       from '../pages/assessment/AssessmentPage';
 
-// Route guard: redirect to /login if no token
+// Academic pages
+import AcademicResultPage   from '../pages/academic/AcademicResultPage';
+import GradesPage           from '../pages/academic/GradesPage';
+import LeaderboardPage      from '../pages/academic/LeaderboardPage';
+import ScholarshipPage      from '../pages/academic/ScholarshipPage';
+import WarningPage          from '../pages/academic/WarningPage';
+
 function RequireAuth({ children }) {
   const token = localStorage.getItem('utc2_token');
   if (!token) return <Navigate to="/login" replace />;
@@ -57,14 +60,20 @@ export default function AppRouter() {
             <Route path=":id" element={<StudentDetailPage />} />
           </Route>
 
-          <Route path="assessment"          element={<AssessmentPage />} />
+          {/* Academic routes */}
+          <Route path="academic">
+            <Route path="results"     element={<AcademicResultPage />} />
+            <Route path="grades"      element={<GradesPage />} />
+            <Route path="leaderboard" element={<LeaderboardPage />} />
+            <Route path="scholarships"element={<ScholarshipPage />} />
+            <Route path="warnings"    element={<WarningPage />} />
+          </Route>
+
           <Route path="notifications"    element={<NotificationPage />} />
-          <Route path="academic"         element={<AcademicPage />} />
           <Route path="feedback"         element={<FeedbackPage />} />
           <Route path="service-requests" element={<ServiceRequestPage />} />
         </Route>
 
-        {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
