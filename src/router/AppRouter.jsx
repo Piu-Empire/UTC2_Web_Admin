@@ -16,6 +16,8 @@ import StudentDetailPage    from '../pages/students/StudentDetailPage';
 import NotificationPage     from '../pages/NotificationPage';
 import FeedbackPage         from '../pages/FeedbackPage';
 import ServiceRequestPage   from '../pages/ServiceRequestPage';
+import AcademicPage         from '../pages/academic/AcademicPage';
+import AssessmentPage       from '../pages/assessment/AssessmentPage';
 
 // Route guard: redirect to /login if no token
 function RequireAuth({ children }) {
@@ -55,7 +57,9 @@ export default function AppRouter() {
             <Route path=":id" element={<StudentDetailPage />} />
           </Route>
 
+          <Route path="assessment"          element={<AssessmentPage />} />
           <Route path="notifications"    element={<NotificationPage />} />
+          <Route path="academic"         element={<AcademicPage />} />
           <Route path="feedback"         element={<FeedbackPage />} />
           <Route path="service-requests" element={<ServiceRequestPage />} />
         </Route>

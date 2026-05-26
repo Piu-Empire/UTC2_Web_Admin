@@ -3,7 +3,8 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Upload, BookOpen, ClipboardList,
   CalendarDays, Wallet, GraduationCap, Bell, MessageSquare,
-  ClipboardCheck, ChevronLeft, ChevronRight, LogOut,
+  ClipboardCheck, ChevronLeft, ChevronRight, LogOut, BarChart2,
+  Star,
 } from 'lucide-react';
 
 // ─── Nav data ────────────────────────────────────────────
@@ -29,6 +30,8 @@ const NAV_GROUPS = [
   {
     label: 'Quản lý',
     items: [
+      { to: '/academic',         icon: BarChart2,      label: 'Kết quả học tập' },
+      { to: '/assessment',       icon: Star,           label: 'Đánh giá rèn luyện' },
       { to: '/notifications',    icon: Bell,           label: 'Thông báo' },
       { to: '/feedback',         icon: MessageSquare,  label: 'Phản hồi' },
       { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
