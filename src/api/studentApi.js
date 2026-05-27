@@ -4,6 +4,6 @@ export const studentApi = {
     // Giữ nguyên API lấy danh sách của Admin
     list: (params) => client.get('/admin/students', { params }),
 
-    // ĐỂ Ý CHỖ NÀY: Sửa lại đường dẫn khớp với @GetMapping("/student/{studentId}") của ProfileController
-    detail: (userId) => client.get(`/profile/student/${userId}`),
+    // ĐỂ Ý CHỖ NÀY: id truyền vào là studentCode (MSSV), gọi đúng endpoint
+    detail: (studentCode) => client.get(`/profile/student/${studentCode}`),
 };

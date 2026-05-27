@@ -1,72 +1,33 @@
-// src/pages/DashboardPage.jsx
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Users, Bell, MessageSquare, ClipboardList,
-  BookOpen, CalendarDays, Wallet, GraduationCap, FileSpreadsheet, UserRound,
+  BookOpen, CalendarDays, Wallet, GraduationCap,
+  FileSpreadsheet, UserRound,
 } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Badge    from '../components/common/Badge';
-
-// ─── Mock data ───────────────────────────────────────────
-
-const MOCK_STATS = {
-  totalStudents:   12480,
-  unreadNotifs:    24,
-  pendingFeedback: 7,
-  pendingRequests: 13,
-};
-
-const MOCK_FEEDBACKS = [
-  { id: 1, studentName: 'Nguyễn Văn An',  type: 'bug',        content: 'Ứng dụng bị lỗi khi xem thời khóa biểu tuần 15.', createdAt: '2025-01-10T08:30:00' },
-  { id: 2, studentName: 'Trần Thị Bình',  type: 'suggestion', content: 'Mong muốn có thể xuất học phí ra PDF.',             createdAt: '2025-01-09T14:20:00' },
-  { id: 3, studentName: 'Lê Hoàng Cường', type: 'contact',    content: 'Cần hỗ trợ đăng ký học lại môn Giải tích 1.',      createdAt: '2025-01-09T10:05:00' },
-  { id: 4, studentName: 'Phạm Thu Dung',  type: 'bug',        content: 'Điểm môn Vật lý hiển thị sai so với bảng điểm.',   createdAt: '2025-01-08T16:45:00' },
-  { id: 5, studentName: 'Đỗ Minh Khoa',   type: 'suggestion', content: 'Thêm thông báo khi điểm được cập nhật.',           createdAt: '2025-01-08T09:00:00' },
-];
-
-const MOCK_REQUESTS = [
-  { id: 1, studentName: 'Nguyễn Thị Lan',  serviceType: 'Cấp bảng điểm',           status: 'pending'    },
-  { id: 2, studentName: 'Vũ Đức Mạnh',     serviceType: 'Xác nhận sinh viên',       status: 'processing' },
-  { id: 3, studentName: 'Hoàng Anh Tuấn',  serviceType: 'Miễn giảm học phí',        status: 'done'       },
-  { id: 4, studentName: 'Bùi Thị Ngọc',    serviceType: 'Đăng ký học lại',          status: 'pending'    },
-  { id: 5, studentName: 'Trịnh Văn Phúc',  serviceType: 'Xác nhận cư trú KTX',      status: 'rejected'   },
-];
-
-// ─── Config ──────────────────────────────────────────────
-
-const STAT_CARDS = [
-  { icon: <Users size={20}/>,         iconBg: 'bg-brand-50',   iconColor: 'text-brand-600',   value: MOCK_STATS.totalStudents,   label: 'Tổng sinh viên'      },
-  { icon: <Bell size={20}/>,          iconBg: 'bg-amber-50',   iconColor: 'text-amber-600',   value: MOCK_STATS.unreadNotifs,    label: 'Thông báo chưa đọc'  },
-  { icon: <MessageSquare size={20}/>, iconBg: 'bg-rose-50',    iconColor: 'text-rose-600',    value: MOCK_STATS.pendingFeedback, label: 'Phản hồi chờ xử lý' },
-  { icon: <ClipboardList size={20}/>, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', value: MOCK_STATS.pendingRequests, label: 'Yêu cầu dịch vụ'    },
-];
+import { studentApi }       from '../api/studentApi';
+import { feedbackApi,
+         STATUS_VARIANT as FB_STATUS_VARIANT,
+         STATUS_LABEL   as FB_STATUS_LABEL,
+         TYPE_LABEL }        from '../api/feedbackApi';
+import { serviceRequestApi,
+         STATUS_LABEL   as SR_STATUS_LABEL,
+         STATUS_VARIANT as SR_STATUS_VARIANT } from '../api/serviceRequestApi';
 
 const IMPORTS = [
-  { to: '/import/students',    Icon: Users,           title: 'Sinh viên',       sub: 'USER + STUDENT_PROFILE' },
-  { to: '/import/profiles',    Icon: UserRound,       title: 'Cập nhật Profile', sub: 'STUDENT_PROFILE'        },
-  { to: '/import/courses',     Icon: BookOpen,        title: 'Học phần',        sub: 'COURSE'                 },
-  { to: '/import/enrollments', Icon: FileSpreadsheet, title: 'Đăng ký & Điểm', sub: 'ENROLLMENT'             },
-  { to: '/import/schedules',   Icon: CalendarDays,    title: 'Thời khóa biểu', sub: 'SCHEDULE'               },
-  { to: '/import/fees',        Icon: Wallet,          title: 'Học phí',         sub: 'FEE'                    },
-  { to: '/import/curriculum',  Icon: GraduationCap,   title: 'Chương trình ĐT', sub: 'CURRICULUM'             },
+  { to: '/import/students',    Icon: Users,           title: 'Sinh viên',        sub: 'USER + STUDENT_PROFILE' },
+  { to: '/import/profiles',    Icon: UserRound,       title: 'Cập nhật Profile',  sub: 'STUDENT_PROFILE'        },
+  { to: '/import/courses',     Icon: BookOpen,        title: 'Học phần',          sub: 'COURSE'                 },
+  { to: '/import/enrollments', Icon: FileSpreadsheet, title: 'Đăng ký & Điểm',   sub: 'ENROLLMENT'             },
+  { to: '/import/schedules',   Icon: CalendarDays,    title: 'Thời khóa biểu',   sub: 'SCHEDULE'               },
+  { to: '/import/fees',        Icon: Wallet,          title: 'Học phí',           sub: 'FEE'                    },
+  { to: '/import/curriculum',  Icon: GraduationCap,   title: 'Chương trình ĐT',  sub: 'CURRICULUM'             },
 ];
 
-const FEEDBACK_TYPE = {
-  bug:        { label: 'Báo lỗi', variant: 'error'   },
-  suggestion: { label: 'Góp ý',   variant: 'info'    },
-  contact:    { label: 'Liên hệ', variant: 'neutral' },
-};
-
-const SR_STATUS = {
-  pending:    { label: 'Chờ xử lý',  variant: 'warning' },
-  processing: { label: 'Đang xử lý', variant: 'info'    },
-  done:       { label: 'Hoàn thành', variant: 'success' },
-  rejected:   { label: 'Từ chối',    variant: 'error'   },
-};
-
-// ─── Helpers ─────────────────────────────────────────────
-
 function timeAgo(dateStr) {
+  if (!dateStr) return '';
   const diff = (Date.now() - new Date(dateStr)) / 1000;
   if (diff < 60)    return 'Vừa xong';
   if (diff < 3600)  return `${Math.floor(diff / 60)} phút trước`;
@@ -75,7 +36,7 @@ function timeAgo(dateStr) {
 }
 
 function Avatar({ name }) {
-  const letters = name.split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
+  const letters = (name || '?').split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
   return (
     <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
       <span className="text-xs font-semibold text-brand-700">{letters}</span>
@@ -83,10 +44,63 @@ function Avatar({ name }) {
   );
 }
 
-// ─── Page ────────────────────────────────────────────────
-
 export default function DashboardPage() {
   const navigate = useNavigate();
+
+  const [stats,    setStats]    = useState({ totalStudents: 0, unreadNotifs: 0, pendingFeedback: 0, pendingRequests: 0 });
+  const [feedbacks,  setFeedbacks]  = useState([]);
+  const [requests,   setRequests]   = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      setLoadingStats(true);
+      try {
+        // Gọi song song 3 API (bỏ notification vì endpoint có thể chưa có)
+        const [svRes, fbRes, srRes] = await Promise.allSettled([
+          studentApi.list({ page: 0, size: 1 }),
+          feedbackApi.list({ status: 'ch\u01b0a \u0111\u1ecdc', page: 0, size: 5 }),
+          serviceRequestApi.list({ status: 'ch\u1edd x\u1eed l\u00fd', page: 0, size: 5 }),
+        ]);
+
+        // Tổng sinh viên
+        const svData = svRes.status === 'fulfilled'
+          ? (svRes.value?.data?.data ?? svRes.value?.data)
+          : null;
+        const totalStudents = svData?.totalElements ?? svData?.total ?? 0;
+
+        // Feedback chưa đọc
+        const fbData = fbRes.status === 'fulfilled'
+          ? (fbRes.value?.data?.data ?? fbRes.value?.data)
+          : null;
+        const fbList = Array.isArray(fbData) ? fbData : (fbData?.content ?? []);
+        const pendingFeedback = fbData?.totalElements ?? fbList.length;
+        setFeedbacks(fbList.slice(0, 5));
+
+        // Service requests chờ
+        const srData = srRes.status === 'fulfilled'
+          ? (srRes.value?.data?.data ?? srRes.value?.data)
+          : null;
+        const srList = Array.isArray(srData) ? srData : (srData?.content ?? []);
+        const pendingRequests = srData?.totalElements ?? srList.length;
+        setRequests(srList.slice(0, 5));
+
+        setStats({ totalStudents, unreadNotifs: 0, pendingFeedback, pendingRequests });
+      } catch (e) {
+        console.error('Dashboard load error', e);
+      } finally {
+        setLoadingStats(false);
+      }
+    }
+    load();
+  }, []);
+
+  const STAT_CARDS = [
+    { icon: <Users size={20}/>,         iconBg: 'bg-brand-50',   iconColor: 'text-brand-600',   value: stats.totalStudents,   label: 'Tổng sinh viên'      },
+    { icon: <Bell size={20}/>,          iconBg: 'bg-amber-50',   iconColor: 'text-amber-600',   value: stats.unreadNotifs,    label: 'Thông báo chưa đọc'  },
+    { icon: <MessageSquare size={20}/>, iconBg: 'bg-rose-50',    iconColor: 'text-rose-600',    value: stats.pendingFeedback, label: 'Phản hồi chờ xử lý'  },
+    { icon: <ClipboardList size={20}/>, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600', value: stats.pendingRequests, label: 'Yêu cầu dịch vụ'     },
+  ];
 
   return (
     <div className="space-y-6 max-w-[1400px]">
@@ -94,15 +108,13 @@ export default function DashboardPage() {
       {/* 4 stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_CARDS.map((card, i) => (
-          <StatCard key={card.label} {...card} index={i} />
+          <StatCard key={card.label} {...card} index={i} loading={loadingStats} />
         ))}
       </div>
 
       {/* Quick import */}
       <section>
-        <p className="font-display font-semibold text-base text-ink mb-3">
-          Import dữ liệu nhanh
-        </p>
+        <p className="font-display font-semibold text-base text-ink mb-3">Import dữ liệu nhanh</p>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {IMPORTS.map(({ to, Icon, title, sub }) => (
             <button
@@ -122,51 +134,65 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Recent activity — 60 / 40 */}
+      {/* Recent activity */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
         {/* Recent feedbacks */}
         <div className="lg:col-span-3 card p-5">
-          <p className="font-display font-semibold text-[15px] text-ink mb-4">Phản hồi gần đây</p>
-          <div className="divide-y divide-surface-border">
-            {MOCK_FEEDBACKS.map(fb => {
-              const t = FEEDBACK_TYPE[fb.type] ?? { label: fb.type, variant: 'neutral' };
-              return (
-                <div key={fb.id} className="flex items-start gap-3 py-3">
-                  <Avatar name={fb.studentName} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <span className="text-sm font-medium text-ink">{fb.studentName}</span>
-                      <Badge variant={t.variant}>{t.label}</Badge>
+          <p className="font-display font-semibold text-[15px] text-ink mb-4">Phản hồi chưa đọc</p>
+          {feedbacks.length === 0 ? (
+            <p className="text-sm text-ink-muted py-4 text-center">Không có phản hồi mới</p>
+          ) : (
+            <div className="divide-y divide-surface-border">
+              {feedbacks.map(fb => {
+                const t = TYPE_LABEL[fb.type] ?? { label: fb.type, variant: 'neutral' };
+                return (
+                  <div key={fb.id} className="flex items-start gap-3 py-3">
+                    <Avatar name={fb.studentName ?? fb.studentCode ?? '?'} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                        <span className="text-sm font-medium text-ink">
+                          {fb.studentName ?? fb.studentCode ?? `#${fb.id}`}
+                        </span>
+                        <Badge variant={t.variant}>{t.label}</Badge>
+                      </div>
+                      <p className="text-xs text-ink-muted line-clamp-1">{fb.content}</p>
                     </div>
-                    <p className="text-xs text-ink-muted line-clamp-1">{fb.content}</p>
+                    <span className="text-xs text-ink-subtle whitespace-nowrap flex-shrink-0 pt-0.5">
+                      {timeAgo(fb.submittedAt)}
+                    </span>
                   </div>
-                  <span className="text-xs text-ink-subtle whitespace-nowrap flex-shrink-0 pt-0.5">
-                    {timeAgo(fb.createdAt)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Service requests */}
         <div className="lg:col-span-2 card p-5">
-          <p className="font-display font-semibold text-[15px] text-ink mb-4">Yêu cầu dịch vụ</p>
-          <div className="divide-y divide-surface-border">
-            {MOCK_REQUESTS.map(sr => {
-              const s = SR_STATUS[sr.status] ?? { label: sr.status, variant: 'neutral' };
-              return (
-                <div key={sr.id} className="flex items-center gap-3 py-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-ink truncate">{sr.studentName}</p>
-                    <p className="text-xs text-ink-muted truncate">{sr.serviceType}</p>
+          <p className="font-display font-semibold text-[15px] text-ink mb-4">Yêu cầu chờ xử lý</p>
+          {requests.length === 0 ? (
+            <p className="text-sm text-ink-muted py-4 text-center">Không có yêu cầu mới</p>
+          ) : (
+            <div className="divide-y divide-surface-border">
+              {requests.map(sr => {
+                const s = SR_STATUS_LABEL[sr.status]
+                  ? { label: SR_STATUS_LABEL[sr.status], variant: SR_STATUS_VARIANT[sr.status] }
+                  : { label: sr.status, variant: 'neutral' };
+                return (
+                  <div key={sr.id} className="flex items-center gap-3 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-ink truncate">
+                        {sr.studentName ?? sr.studentCode ?? `#${sr.id}`}
+                      </p>
+                      <p className="text-xs text-ink-muted truncate">{sr.serviceType}</p>
+                    </div>
+                    <Badge variant={s.variant}>{s.label}</Badge>
                   </div>
-                  <Badge variant={s.variant}>{s.label}</Badge>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
       </div>

@@ -46,9 +46,9 @@ export default function StatCard({
       </div>
 
       {/* Label */}
-      <p className="text-sm text-ink-muted mt-1">
+      <div className="text-sm text-ink-muted mt-1">
         {loading ? <SkeletonBar className="h-3 w-32 mt-1" /> : label}
-      </p>
+      </div>
     </motion.div>
   );
 }

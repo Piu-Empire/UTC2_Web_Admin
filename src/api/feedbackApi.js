@@ -15,8 +15,9 @@ export const STATUS_VARIANT = {
 
 // ── Type mapping (khớp với DB cột `type`) ────────────────────────────
 export const TYPE_LABEL = {
-    'Lỗi': { label: 'Báo lỗi', variant: 'error' },
-    'Góp ý': { label: 'Góp ý', variant: 'info' },
+    'góp ý': { label: 'Góp ý', variant: 'info' },
+    'báo cáo lỗi hệ thống': { label: 'Báo lỗi', variant: 'error' },
+    'liên hệ': { label: 'Liên hệ', variant: 'neutral' },
 };
 
 // ── Admin APIs ────────────────────────────────────────────────────────

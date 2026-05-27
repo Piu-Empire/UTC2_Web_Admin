@@ -1,21 +1,20 @@
 import client from './axiosClient';
 
-// ── Status mapping: backend enum → label tiếng Việt ─────────────────
+// ── Status mapping: khớp với DB cột `status` (tiếng Việt) ──────────
 export const STATUS_LABEL = {
-    PENDING: 'Chờ xử lý',
-    PROCESSING: 'Đang xử lý',
-    COMPLETED: 'Hoàn thành',
-    REJECTED: 'Từ chối',
+    'chờ xử lý': 'Chờ xử lý',
+    'đang xử lý': 'Đang xử lý',
+    'hoàn thành': 'Hoàn thành',
+    'từ chối': 'Từ chối',
 };
 
 export const STATUS_VARIANT = {
-    PENDING: 'warning',
-    PROCESSING: 'info',
-    COMPLETED: 'success',
-    REJECTED: 'error',
+    'chờ xử lý': 'warning',
+    'đang xử lý': 'info',
+    'hoàn thành': 'success',
+    'từ chối': 'error',
 };
 
-// Tất cả enum giá trị backend chấp nhận
 export const ALL_STATUSES = Object.keys(STATUS_LABEL);
 
 // ── Service type mapping ─────────────────────────────────────────────
