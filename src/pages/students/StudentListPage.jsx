@@ -20,7 +20,7 @@ const SELECT = 'border border-surface-border rounded-lg px-3 py-2 text-sm bg-whi
 // Các danh mục bộ lọc chuẩn hóa theo thiết kế của hệ thống Backend
 const FACULTIES = ['Công nghệ TT', 'Cơ khí', 'Điện - Điện tử', 'Kinh tế vận tải', 'Công trình giao thông'];
 const COHORTS = ['2026', '2025', '2024', '2023', '2022', '2021', '2020'];
-const STATUSES = ['ACTIVE', 'PENDING', 'SUSPENDED', 'GRADUATED'];
+const STATUSES = ['đang học', 'bảo lưu', 'đình chỉ', 'đã tốt nghiệp'];
 
 function AvatarName({ name }) {
   return (

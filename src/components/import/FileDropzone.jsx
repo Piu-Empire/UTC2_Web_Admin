@@ -49,6 +49,26 @@ export default function FileDropzone({ file, onFile, sampleUrl }) {
     onFile(f);
   }
 
+  async function handleDownloadSample(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const res = await fetch(sampleUrl);
+      if (!res.ok) throw new Error('Không tìm thấy file mẫu');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = sampleUrl.split('/').pop();
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Không tải được file mẫu: ' + err.message);
+    }
+  }
+
   // ── File selected state ──────────────────────────────
   if (file) {
     return (
@@ -105,15 +125,14 @@ export default function FileDropzone({ file, onFile, sampleUrl }) {
 
       {/* Sample download link */}
       {sampleUrl && (
-        <a
-          href={sampleUrl}
-          download
+        <button
+          type="button"
+          onClick={handleDownloadSample}
           className="inline-flex items-center gap-1.5 text-xs text-brand-600 hover:underline"
-          onClick={e => e.stopPropagation()}
         >
           <Download size={13} />
           Tải file mẫu .xlsx
-        </a>
+        </button>
       )}
     </div>
   );
