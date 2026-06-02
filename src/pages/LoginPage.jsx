@@ -39,10 +39,15 @@ export default function LoginPage() {
         name:        data.email?.split('@')[0] ?? data.studentCode ?? 'Admin',
         email:       data.email,
         studentCode: data.studentCode,
-        role:        'ADMIN',
+        role:        data.role ?? 'ADMIN',
+        staffLevel:  data.staffLevel ?? null,
       }));
 
-      navigate('/', { replace: true });
+      // Redirect theo role: lv1 không có dashboard → thẳng vào đánh giá
+      const role       = data.role ?? 'ADMIN';
+      const staffLevel = data.staffLevel ?? null;
+      const to = (role === 'STAFF' && staffLevel === 1) ? '/assessment' : '/';
+      navigate(to, { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || 'Đăng nhập thất bại. Kiểm tra lại tài khoản.';
       toast.error(msg, { position: 'top-center' });
@@ -112,16 +117,16 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* FIX: MSSV, không phải Email */}
+            {/* Email hoặc MSSV */}
             <div>
               <label className="block text-sm font-medium text-ink mb-1.5">
-                Mã số sinh viên (MSSV)
+                Email hoặc MSSV
               </label>
               <input
                 type="text"
                 value={studentCode}
                 onChange={e => setStudentCode(e.target.value)}
-                placeholder="VD: 2211020001"
+                placeholder="VD: admin@utc2.edu.vn hoặc 2211020001"
                 autoComplete="username"
                 disabled={loading}
                 className="

@@ -2,26 +2,28 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import LoginPage from '../pages/LoginPage';
 
-import DashboardPage        from '../pages/DashboardPage';
-import ImportStudentPage    from '../pages/import/ImportStudentPage';
-import ImportCoursePage     from '../pages/import/ImportCoursePage';
-import ImportEnrollmentPage from '../pages/import/ImportEnrollmentPage';
-import ImportSchedulePage   from '../pages/import/ImportSchedulePage';
-import ImportFeePage        from '../pages/import/ImportFeePage';
-import ImportCurriculumPage from '../pages/import/ImportCurriculumPage';
-import ImportProfilePage    from '../pages/import/ImportProfilePage';
-import StudentListPage      from '../pages/students/StudentListPage';
-import StudentDetailPage    from '../pages/students/StudentDetailPage';
-import NotificationPage     from '../pages/NotificationPage';
-import FeedbackPage         from '../pages/FeedbackPage';
-import ServiceRequestPage   from '../pages/ServiceRequestPage';
+import DashboardPage           from '../pages/DashboardPage';
+import ImportStudentPage       from '../pages/import/ImportStudentPage';
+import ImportCoursePage        from '../pages/import/ImportCoursePage';
+import ImportEnrollmentPage    from '../pages/import/ImportEnrollmentPage';
+import ImportSchedulePage      from '../pages/import/ImportSchedulePage';
+import ImportFeePage           from '../pages/import/ImportFeePage';
+import ImportCurriculumPage    from '../pages/import/ImportCurriculumPage';
+import ImportProfilePage       from '../pages/import/ImportProfilePage';
+import StudentListPage         from '../pages/students/StudentListPage';
+import StudentDetailPage       from '../pages/students/StudentDetailPage';
+import NotificationPage        from '../pages/NotificationPage';
+import FeedbackPage            from '../pages/FeedbackPage';
+import ServiceRequestPage      from '../pages/ServiceRequestPage';
 
 // Academic pages
-import AcademicResultPage   from '../pages/academic/AcademicResultPage';
-import GradesPage           from '../pages/academic/GradesPage';
-import LeaderboardPage      from '../pages/academic/LeaderboardPage';
-import ScholarshipPage      from '../pages/academic/ScholarshipPage';
-import WarningPage          from '../pages/academic/WarningPage';
+import AcademicResultPage      from '../pages/academic/AcademicResultPage';
+import GradesPage              from '../pages/academic/GradesPage';
+import LeaderboardPage         from '../pages/academic/LeaderboardPage';
+import ScholarshipPage         from '../pages/academic/ScholarshipPage';
+import WarningPage             from '../pages/academic/WarningPage';
+import AdvisorWarningPage      from '../pages/academic/AdvisorWarningPage';
+import AdvisorScholarshipPage  from '../pages/academic/AdvisorScholarshipPage';
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem('utc2_token');
@@ -34,15 +36,7 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-
-        <Route
-          path="/"
-          element={
-            <RequireAuth>
-              <AppLayout />
-            </RequireAuth>
-          }
-        >
+        <Route path="/" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<DashboardPage />} />
 
           <Route path="import">
@@ -60,20 +54,25 @@ export default function AppRouter() {
             <Route path=":id" element={<StudentDetailPage />} />
           </Route>
 
-          {/* Academic routes */}
           <Route path="academic">
-            <Route path="results"     element={<AcademicResultPage />} />
-            <Route path="grades"      element={<GradesPage />} />
-            <Route path="leaderboard" element={<LeaderboardPage />} />
-            <Route path="scholarships"element={<ScholarshipPage />} />
-            <Route path="warnings"    element={<WarningPage />} />
+            {/* ADMIN / xem tổng quan */}
+            <Route path="results"      element={<AcademicResultPage />} />
+            <Route path="leaderboard"  element={<LeaderboardPage />} />
+            <Route path="scholarships" element={<ScholarshipPage />} />
+            <Route path="warnings"     element={<WarningPage />} />
+
+            {/* STAFF lv2: nhập điểm theo môn */}
+            <Route path="grades"       element={<GradesPage />} />
+
+            {/* ADVISOR: quản lý warning + scholarship */}
+            <Route path="advisor/warnings"     element={<AdvisorWarningPage />} />
+            <Route path="advisor/scholarships" element={<AdvisorScholarshipPage />} />
           </Route>
 
           <Route path="notifications"    element={<NotificationPage />} />
           <Route path="feedback"         element={<FeedbackPage />} />
           <Route path="service-requests" element={<ServiceRequestPage />} />
         </Route>
-
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

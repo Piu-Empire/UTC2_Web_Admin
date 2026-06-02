@@ -4,6 +4,7 @@ import {
   Users, Bell, MessageSquare, ClipboardList,
   BookOpen, CalendarDays, Wallet, GraduationCap,
   FileSpreadsheet, UserRound,
+  BarChart2, Trophy, Award, ShieldAlert, Star,
 } from 'lucide-react';
 import StatCard from '../components/common/StatCard';
 import Badge    from '../components/common/Badge';
@@ -16,6 +17,27 @@ import { serviceRequestApi,
          STATUS_LABEL   as SR_STATUS_LABEL,
          STATUS_VARIANT as SR_STATUS_VARIANT } from '../api/serviceRequestApi';
 
+// ─── Permission helper ────────────────────────────────────────────────────────
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('utc2_user') || '{}'); }
+  catch { return {}; }
+}
+
+function canSee(section, role, staffLevel) {
+  if (role === 'ADMIN') return true;
+  switch (section) {
+    case 'academic':
+      return role === 'ADVISOR' || (role === 'STAFF' && staffLevel >= 2);
+    case 'assessment':
+      return role === 'ADVISOR' || (role === 'STAFF' && staffLevel >= 3);
+    case 'lv5':
+      return role === 'STAFF' && staffLevel >= 5;
+    default:
+      return false;
+  }
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
 const IMPORTS = [
   { to: '/import/students',    Icon: Users,           title: 'Sinh viên',        sub: 'USER + STUDENT_PROFILE' },
   { to: '/import/profiles',    Icon: UserRound,       title: 'Cập nhật Profile',  sub: 'STUDENT_PROFILE'        },
@@ -26,6 +48,18 @@ const IMPORTS = [
   { to: '/import/curriculum',  Icon: GraduationCap,   title: 'Chương trình ĐT',  sub: 'CURRICULUM'             },
 ];
 
+const ACADEMIC_SHORTCUTS = [
+  { to: '/academic/results',      Icon: BarChart2,   title: 'Kết quả học tập',    sub: 'Xem điểm sinh viên'         },
+  { to: '/academic/leaderboard',  Icon: Trophy,      title: 'Bảng xếp hạng',      sub: 'Top sinh viên GPA cao'      },
+  { to: '/academic/scholarships', Icon: Award,       title: 'Học bổng',            sub: 'Quản lý học bổng'           },
+  { to: '/academic/warnings',     Icon: ShieldAlert, title: 'Cảnh báo học vụ',    sub: 'Sinh viên có cảnh báo'      },
+];
+
+const ASSESSMENT_SHORTCUT = {
+  to: '/assessment', Icon: Star, title: 'Đánh giá rèn luyện', sub: 'Xem & duyệt đánh giá',
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const diff = (Date.now() - new Date(dateStr)) / 1000;
@@ -44,8 +78,37 @@ function Avatar({ name }) {
   );
 }
 
+function ShortcutCard({ to, Icon, title, sub, onClick }) {
+  return (
+    <button
+      onClick={() => onClick(to)}
+      className="card card-hover p-4 flex items-center gap-3 text-left w-full"
+    >
+      <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center flex-shrink-0">
+        <Icon size={18} className="text-ink-muted" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-ink">{title}</p>
+        <p className="text-xs text-ink-muted">{sub}</p>
+      </div>
+    </button>
+  );
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const user = getUser();
+  const { role, staffLevel } = user;
+
+  const showAcademic   = canSee('academic',   role, staffLevel);
+  const showAssessment = canSee('assessment', role, staffLevel);
+  const showLv5        = canSee('lv5',        role, staffLevel);
+
+  // Lv2 chỉ thấy kết quả học tập — ẩn học bổng/bảng xếp hạng/cảnh báo
+  const academicItems = (role === 'STAFF' && staffLevel === 2)
+    ? ACADEMIC_SHORTCUTS.slice(0, 1)   // chỉ "Kết quả học tập"
+    : ACADEMIC_SHORTCUTS;              // lv3+ và advisor thấy hết
 
   const [stats,    setStats]    = useState({ totalStudents: 0, unreadNotifs: 0, pendingFeedback: 0, pendingRequests: 0 });
   const [feedbacks,  setFeedbacks]  = useState([]);
@@ -53,39 +116,29 @@ export default function DashboardPage() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
+    if (!showLv5) { setLoadingStats(false); return; }
     async function load() {
       setLoadingStats(true);
       try {
-        // Gọi song song 3 API (bỏ notification vì endpoint có thể chưa có)
         const [svRes, fbRes, srRes] = await Promise.allSettled([
           studentApi.list({ page: 0, size: 1 }),
-          feedbackApi.list({ status: 'ch\u01b0a \u0111\u1ecdc', page: 0, size: 5 }),
-          serviceRequestApi.list({ status: 'ch\u1edd x\u1eed l\u00fd', page: 0, size: 5 }),
+          feedbackApi.list({ status: 'chưa đọc', page: 0, size: 5 }),
+          serviceRequestApi.list({ status: 'chờ xử lý', page: 0, size: 5 }),
         ]);
-
-        // Tổng sinh viên
-        const svData = svRes.status === 'fulfilled'
-          ? (svRes.value?.data?.data ?? svRes.value?.data)
-          : null;
+        const svData = svRes.status === 'fulfilled' ? (svRes.value?.data?.data ?? svRes.value?.data) : null;
         const totalStudents = svData?.totalElements ?? svData?.total ?? 0;
-
-        // Feedback chưa đọc
-        const fbData = fbRes.status === 'fulfilled'
-          ? (fbRes.value?.data?.data ?? fbRes.value?.data)
-          : null;
+        const fbData = fbRes.status === 'fulfilled' ? (fbRes.value?.data?.data ?? fbRes.value?.data) : null;
         const fbList = Array.isArray(fbData) ? fbData : (fbData?.content ?? []);
-        const pendingFeedback = fbData?.totalElements ?? fbList.length;
         setFeedbacks(fbList.slice(0, 5));
-
-        // Service requests chờ
-        const srData = srRes.status === 'fulfilled'
-          ? (srRes.value?.data?.data ?? srRes.value?.data)
-          : null;
+        const srData = srRes.status === 'fulfilled' ? (srRes.value?.data?.data ?? srRes.value?.data) : null;
         const srList = Array.isArray(srData) ? srData : (srData?.content ?? []);
-        const pendingRequests = srData?.totalElements ?? srList.length;
         setRequests(srList.slice(0, 5));
-
-        setStats({ totalStudents, unreadNotifs: 0, pendingFeedback, pendingRequests });
+        setStats({
+          totalStudents,
+          unreadNotifs: 0,
+          pendingFeedback: fbData?.totalElements ?? fbList.length,
+          pendingRequests: srData?.totalElements ?? srList.length,
+        });
       } catch (e) {
         console.error('Dashboard load error', e);
       } finally {
@@ -93,7 +146,7 @@ export default function DashboardPage() {
       }
     }
     load();
-  }, []);
+  }, [showLv5]);
 
   const STAT_CARDS = [
     { icon: <Users size={20}/>,         iconBg: 'bg-brand-50',   iconColor: 'text-brand-600',   value: stats.totalStudents,   label: 'Tổng sinh viên'      },
@@ -105,97 +158,110 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 max-w-[1400px]">
 
-      {/* 4 stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAT_CARDS.map((card, i) => (
-          <StatCard key={card.label} {...card} index={i} loading={loadingStats} />
-        ))}
-      </div>
-
-      {/* Quick import */}
-      <section>
-        <p className="font-display font-semibold text-base text-ink mb-3">Import dữ liệu nhanh</p>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-          {IMPORTS.map(({ to, Icon, title, sub }) => (
-            <button
-              key={to}
-              onClick={() => navigate(to)}
-              className="card card-hover p-4 flex items-center gap-3 text-left w-full"
-            >
-              <div className="w-9 h-9 rounded-lg bg-surface-muted flex items-center justify-center flex-shrink-0">
-                <Icon size={18} className="text-ink-muted" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-ink">{title}</p>
-                <p className="text-xs text-ink-muted">{sub}</p>
-              </div>
-            </button>
+      {/* Stat cards — chỉ lv5+ */}
+      {showLv5 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {STAT_CARDS.map((card, i) => (
+            <StatCard key={card.label} {...card} index={i} loading={loadingStats} />
           ))}
         </div>
-      </section>
+      )}
 
-      {/* Recent activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+      {/* Shortcuts kết quả học tập — lv2+ và advisor */}
+      {showAcademic && (
+        <section>
+          <p className="font-display font-semibold text-base text-ink mb-3">Kết quả học tập</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {academicItems.map(item => (
+              <ShortcutCard key={item.to} {...item} onClick={navigate} />
+            ))}
+          </div>
+        </section>
+      )}
 
-        {/* Recent feedbacks */}
-        <div className="lg:col-span-3 card p-5">
-          <p className="font-display font-semibold text-[15px] text-ink mb-4">Phản hồi chưa đọc</p>
-          {feedbacks.length === 0 ? (
-            <p className="text-sm text-ink-muted py-4 text-center">Không có phản hồi mới</p>
-          ) : (
-            <div className="divide-y divide-surface-border">
-              {feedbacks.map(fb => {
-                const t = TYPE_LABEL[fb.type] ?? { label: fb.type, variant: 'neutral' };
-                return (
-                  <div key={fb.id} className="flex items-start gap-3 py-3">
-                    <Avatar name={fb.studentName ?? fb.studentCode ?? '?'} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                        <span className="text-sm font-medium text-ink">
-                          {fb.studentName ?? fb.studentCode ?? `#${fb.id}`}
-                        </span>
-                        <Badge variant={t.variant}>{t.label}</Badge>
+      {/* Shortcut đánh giá rèn luyện — advisor + lv3+ */}
+      {showAssessment && (
+        <section>
+          <p className="font-display font-semibold text-base text-ink mb-3">Đánh giá rèn luyện</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <ShortcutCard {...ASSESSMENT_SHORTCUT} onClick={navigate} />
+          </div>
+        </section>
+      )}
+
+      {/* Import nhanh — chỉ lv5+ */}
+      {showLv5 && (
+        <section>
+          <p className="font-display font-semibold text-base text-ink mb-3">Import dữ liệu nhanh</p>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {IMPORTS.map(({ to, Icon, title, sub }) => (
+              <ShortcutCard key={to} to={to} Icon={Icon} title={title} sub={sub} onClick={navigate} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Recent activity — chỉ lv5+ */}
+      {showLv5 && (
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          <div className="lg:col-span-3 card p-5">
+            <p className="font-display font-semibold text-[15px] text-ink mb-4">Phản hồi chưa đọc</p>
+            {feedbacks.length === 0 ? (
+              <p className="text-sm text-ink-muted py-4 text-center">Không có phản hồi mới</p>
+            ) : (
+              <div className="divide-y divide-surface-border">
+                {feedbacks.map(fb => {
+                  const t = TYPE_LABEL[fb.type] ?? { label: fb.type, variant: 'neutral' };
+                  return (
+                    <div key={fb.id} className="flex items-start gap-3 py-3">
+                      <Avatar name={fb.studentName ?? fb.studentCode ?? '?'} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <span className="text-sm font-medium text-ink">
+                            {fb.studentName ?? fb.studentCode ?? `#${fb.id}`}
+                          </span>
+                          <Badge variant={t.variant}>{t.label}</Badge>
+                        </div>
+                        <p className="text-xs text-ink-muted line-clamp-1">{fb.content}</p>
                       </div>
-                      <p className="text-xs text-ink-muted line-clamp-1">{fb.content}</p>
+                      <span className="text-xs text-ink-subtle whitespace-nowrap flex-shrink-0 pt-0.5">
+                        {timeAgo(fb.submittedAt)}
+                      </span>
                     </div>
-                    <span className="text-xs text-ink-subtle whitespace-nowrap flex-shrink-0 pt-0.5">
-                      {timeAgo(fb.submittedAt)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-        {/* Service requests */}
-        <div className="lg:col-span-2 card p-5">
-          <p className="font-display font-semibold text-[15px] text-ink mb-4">Yêu cầu chờ xử lý</p>
-          {requests.length === 0 ? (
-            <p className="text-sm text-ink-muted py-4 text-center">Không có yêu cầu mới</p>
-          ) : (
-            <div className="divide-y divide-surface-border">
-              {requests.map(sr => {
-                const s = SR_STATUS_LABEL[sr.status]
-                  ? { label: SR_STATUS_LABEL[sr.status], variant: SR_STATUS_VARIANT[sr.status] }
-                  : { label: sr.status, variant: 'neutral' };
-                return (
-                  <div key={sr.id} className="flex items-center gap-3 py-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-ink truncate">
-                        {sr.studentName ?? sr.studentCode ?? `#${sr.id}`}
-                      </p>
-                      <p className="text-xs text-ink-muted truncate">{sr.serviceType}</p>
+          <div className="lg:col-span-2 card p-5">
+            <p className="font-display font-semibold text-[15px] text-ink mb-4">Yêu cầu chờ xử lý</p>
+            {requests.length === 0 ? (
+              <p className="text-sm text-ink-muted py-4 text-center">Không có yêu cầu mới</p>
+            ) : (
+              <div className="divide-y divide-surface-border">
+                {requests.map(sr => {
+                  const s = SR_STATUS_LABEL[sr.status]
+                    ? { label: SR_STATUS_LABEL[sr.status], variant: SR_STATUS_VARIANT[sr.status] }
+                    : { label: sr.status, variant: 'neutral' };
+                  return (
+                    <div key={sr.id} className="flex items-center gap-3 py-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-ink truncate">
+                          {sr.studentName ?? sr.studentCode ?? `#${sr.id}`}
+                        </p>
+                        <p className="text-xs text-ink-muted truncate">{sr.serviceType}</p>
+                      </div>
+                      <Badge variant={s.variant}>{s.label}</Badge>
                     </div>
-                    <Badge variant={s.variant}>{s.label}</Badge>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
+      )}
 
-      </div>
     </div>
   );
 }
