@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Upload, BookOpen, ClipboardList,
   CalendarDays, Wallet, GraduationCap, Bell, MessageSquare,
   ClipboardCheck, ChevronLeft, ChevronRight, LogOut,
-  BarChart2, Trophy, Award, ShieldAlert, Star,
+  BarChart2, Trophy, Award, ShieldAlert, Star, Download,
 } from 'lucide-react';
 
 // ─── Permission helpers ───────────────────────────────────────────────────────
@@ -26,6 +26,11 @@ function canSee(section, role, staffLevel) {
     case 'dashboard':
       if (role === 'ADVISOR') return true;
       if (role === 'STAFF' && staffLevel >= 2) return true;
+      return false;
+
+    case 'schedules':
+      // Cho phép mọi staff (từ lớp trưởng đến admin) xem. Quyền import/export xử lý chi tiết bên trong.
+      if (role === 'STAFF' || role === 'ADVISOR') return true;
       return false;
 
     case 'assessment':
@@ -84,9 +89,9 @@ const NAV_GROUPS = [
     label: 'Học thuật',
     section: 'academic_advanced',
     items: [
-      { to: '/academic/leaderboard',  icon: Trophy,      label: 'Bảng xếp hạng' },
-      { to: '/academic/scholarships', icon: Award,       label: 'Học bổng' },
-      { to: '/academic/warnings',     icon: ShieldAlert, label: 'Cảnh báo học vụ' },
+      { to: '/academic/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' },
+      { to: '/academic/scholarships', icon: Award, label: 'Học bổng' },
+      { to: '/academic/warnings', icon: ShieldAlert, label: 'Cảnh báo học vụ' },
     ],
   },
   {
@@ -101,26 +106,26 @@ const NAV_GROUPS = [
     section: 'students_view',
     items: [
       { to: '/students', icon: Users, label: 'Sinh viên' },
+      { to: '/schedules', icon: CalendarDays, label: 'TKB theo lớp' },
     ],
   },
+
   {
     label: 'Import',
     section: 'lv5',
     items: [
-      { to: '/import/students',    icon: Upload,        label: 'Sinh viên' },
-      { to: '/import/courses',     icon: BookOpen,      label: 'Học phần' },
+      { to: '/import/courses', icon: BookOpen, label: 'Học phần' },
       { to: '/import/enrollments', icon: ClipboardList, label: 'Đăng ký & Điểm' },
-      { to: '/import/schedules',   icon: CalendarDays,  label: 'Thời khóa biểu' },
-      { to: '/import/fees',        icon: Wallet,        label: 'Học phí' },
-      { to: '/import/curriculum',  icon: GraduationCap, label: 'Chương trình ĐT' },
+      { to: '/import/fees', icon: Wallet, label: 'Học phí' },
+      { to: '/import/curriculum', icon: GraduationCap, label: 'Chương trình ĐT' },
     ],
   },
   {
     label: 'Tiện ích',
     section: 'lv5',
     items: [
-      { to: '/notifications',    icon: Bell,           label: 'Thông báo' },
-      { to: '/feedback',         icon: MessageSquare,  label: 'Phản hồi' },
+      { to: '/notifications', icon: Bell, label: 'Thông báo' },
+      { to: '/feedback', icon: MessageSquare, label: 'Phản hồi' },
       { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
     ],
   },
@@ -151,7 +156,7 @@ export default function Sidebar() {
 
   // Label vai trò hiển thị ở bottom
   function roleLabel() {
-    if (role === 'ADMIN')   return 'Quản trị viên';
+    if (role === 'ADMIN') return 'Quản trị viên';
     if (role === 'ADVISOR') return 'Cố vấn học tập';
     if (role === 'STAFF') {
       const map = { 1: 'Tập thể lớp', 2: 'Giảng viên', 3: 'Bộ môn', 4: 'Khoa', 5: 'Phòng giáo vụ' };

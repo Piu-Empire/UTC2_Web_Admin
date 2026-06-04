@@ -6,7 +6,6 @@ import DashboardPage           from '../pages/DashboardPage';
 import ImportStudentPage       from '../pages/import/ImportStudentPage';
 import ImportCoursePage        from '../pages/import/ImportCoursePage';
 import ImportEnrollmentPage    from '../pages/import/ImportEnrollmentPage';
-import ImportSchedulePage      from '../pages/import/ImportSchedulePage';
 import ImportFeePage           from '../pages/import/ImportFeePage';
 import ImportCurriculumPage    from '../pages/import/ImportCurriculumPage';
 import ImportProfilePage       from '../pages/import/ImportProfilePage';
@@ -15,6 +14,12 @@ import StudentDetailPage       from '../pages/students/StudentDetailPage';
 import NotificationPage        from '../pages/NotificationPage';
 import FeedbackPage            from '../pages/FeedbackPage';
 import ServiceRequestPage      from '../pages/ServiceRequestPage';
+
+// Schedules pages
+import ScheduleListPage        from '../pages/schedules/ScheduleListPage';
+import ImportSchedulePage      from '../pages/schedules/ImportSchedulePage';
+import ExportSchedulePage      from '../pages/schedules/ExportSchedulePage';
+import ScheduleFormPage        from '../pages/schedules/ScheduleFormPage';
 
 // Academic pages
 import AcademicResultPage      from '../pages/academic/AcademicResultPage';
@@ -58,7 +63,6 @@ export default function AppRouter() {
             <Route path="students"    element={<RequireImport><ImportStudentPage /></RequireImport>} />
             <Route path="courses"     element={<RequireImport><ImportCoursePage /></RequireImport>} />
             <Route path="enrollments" element={<RequireImport><ImportEnrollmentPage /></RequireImport>} />
-            <Route path="schedules"   element={<RequireImport><ImportSchedulePage /></RequireImport>} />
             <Route path="fees"        element={<RequireImport><ImportFeePage /></RequireImport>} />
             <Route path="curriculum"  element={<RequireImport><ImportCurriculumPage /></RequireImport>} />
             <Route path="profiles"    element={<RequireImport><ImportProfilePage /></RequireImport>} />
@@ -67,6 +71,14 @@ export default function AppRouter() {
           <Route path="students">
             <Route index element={<StudentListPage />} />
             <Route path=":id" element={<StudentDetailPage />} />
+          </Route>
+
+          <Route path="schedules">
+            <Route index element={<ScheduleListPage />} />
+            <Route path="import" element={<RequireImport><ImportSchedulePage /></RequireImport>} />
+            <Route path="export" element={<ExportSchedulePage />} />
+            <Route path="create" element={<RequireImport><ScheduleFormPage /></RequireImport>} />
+            <Route path=":id/edit" element={<RequireImport><ScheduleFormPage /></RequireImport>} />
           </Route>
 
           <Route path="academic">
