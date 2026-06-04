@@ -44,6 +44,16 @@ function canSee(section, role, staffLevel) {
       if (role === 'STAFF' && staffLevel >= 3) return true;
       return false;
 
+    // Xem danh sách sinh viên: tất cả ADVISOR và STAFF đều được
+    case 'students_view':
+      if (role === 'ADVISOR') return true;
+      if (role === 'STAFF') return true;
+      return false;
+
+    // Import data & các tính năng cao cấp: chỉ ADMIN (đã return true ở trên)
+    case 'admin_only':
+      return false;
+
     case 'lv5':
       if (role === 'STAFF' && staffLevel >= 5) return true;
       return false;
@@ -88,7 +98,7 @@ const NAV_GROUPS = [
   },
   {
     label: 'Sinh viên',
-    section: 'lv5',
+    section: 'students_view',
     items: [
       { to: '/students', icon: Users, label: 'Sinh viên' },
     ],

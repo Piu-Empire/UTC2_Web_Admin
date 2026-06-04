@@ -31,6 +31,21 @@ function RequireAuth({ children }) {
   return children;
 }
 
+// Chỉ ADMIN hoặc STAFF lv5 mới được vào các trang import
+function RequireImport({ children }) {
+  const token = localStorage.getItem('utc2_token');
+  if (!token) return <Navigate to="/login" replace />;
+  try {
+    const user = JSON.parse(localStorage.getItem('utc2_user') || '{}');
+    const { role, staffLevel } = user;
+    const allowed = role === 'ADMIN' || (role === 'STAFF' && staffLevel >= 5);
+    if (!allowed) return <Navigate to="/" replace />;
+  } catch {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+}
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
@@ -40,13 +55,13 @@ export default function AppRouter() {
           <Route index element={<DashboardPage />} />
 
           <Route path="import">
-            <Route path="students"    element={<ImportStudentPage />} />
-            <Route path="courses"     element={<ImportCoursePage />} />
-            <Route path="enrollments" element={<ImportEnrollmentPage />} />
-            <Route path="schedules"   element={<ImportSchedulePage />} />
-            <Route path="fees"        element={<ImportFeePage />} />
-            <Route path="curriculum"  element={<ImportCurriculumPage />} />
-            <Route path="profiles"    element={<ImportProfilePage />} />
+            <Route path="students"    element={<RequireImport><ImportStudentPage /></RequireImport>} />
+            <Route path="courses"     element={<RequireImport><ImportCoursePage /></RequireImport>} />
+            <Route path="enrollments" element={<RequireImport><ImportEnrollmentPage /></RequireImport>} />
+            <Route path="schedules"   element={<RequireImport><ImportSchedulePage /></RequireImport>} />
+            <Route path="fees"        element={<RequireImport><ImportFeePage /></RequireImport>} />
+            <Route path="curriculum"  element={<RequireImport><ImportCurriculumPage /></RequireImport>} />
+            <Route path="profiles"    element={<RequireImport><ImportProfilePage /></RequireImport>} />
           </Route>
 
           <Route path="students">
