@@ -11,6 +11,7 @@ import {
 // ─── Permission helpers ───────────────────────────────────────────────────────
 
 function getUser() {
+  
   try { return JSON.parse(localStorage.getItem('utc2_user') || '{}'); }
   catch { return {}; }
 }
