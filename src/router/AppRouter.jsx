@@ -13,7 +13,8 @@ import StudentListPage         from '../pages/students/StudentListPage';
 import StudentDetailPage       from '../pages/students/StudentDetailPage';
 import NotificationPage        from '../pages/NotificationPage';
 import FeedbackPage            from '../pages/FeedbackPage';
-import ServiceRequestPage      from '../pages/ServiceRequestPage';
+import ServiceRequestPage           from '../pages/ServiceRequestPage';
+import DormitoryRegistrationPage   from '../pages/dormitory/DormitoryRegistrationPage';
 
 // Academic pages
 import AcademicResultPage      from '../pages/academic/AcademicResultPage';
@@ -72,6 +73,9 @@ export default function AppRouter() {
           <Route path="notifications"    element={<NotificationPage />} />
           <Route path="feedback"         element={<FeedbackPage />} />
           <Route path="service-requests" element={<ServiceRequestPage />} />
+          <Route path="dormitory">
+            <Route path="registrations" element={<DormitoryRegistrationPage />} />
+          </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

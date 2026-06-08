@@ -11,16 +11,10 @@ import {
 // ─── Permission helpers ───────────────────────────────────────────────────────
 
 function getUser() {
-  
   try { return JSON.parse(localStorage.getItem('utc2_user') || '{}'); }
   catch { return {}; }
 }
 
-/**
- * Kiểm tra user có được thấy section không.
- * role: 'ADMIN' | 'ADVISOR' | 'STAFF' | 'STUDENT'
- * staffLevel: 1 | 2 | 3 | 4 | 5 | null
- */
 function canSee(section, role, staffLevel) {
   if (role === 'ADMIN') return true;
 
@@ -36,18 +30,22 @@ function canSee(section, role, staffLevel) {
       return false;
 
     case 'academic_results':
-      // Kết quả học tập: lv2+
       if (role === 'STAFF' && staffLevel >= 2) return true;
       return false;
 
     case 'academic_advanced':
-      // Học bổng, bảng xếp hạng, cảnh báo: lv3+ và advisor
       if (role === 'ADVISOR') return true;
       if (role === 'STAFF' && staffLevel >= 3) return true;
       return false;
 
     case 'lv5':
+      // lv5 restricted chỉ thấy section riêng, không thấy section lv5 chung
+      if (role === 'STAFF' && staffLevel === 5) return false;
       if (role === 'STAFF' && staffLevel >= 5) return true;
+      return false;
+
+    case 'lv5_restricted':
+      if (role === 'STAFF' && staffLevel === 5) return true;
       return false;
 
     default:
@@ -82,8 +80,13 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Quản lý',
+    label: 'Ký túc xá',
     section: 'assessment',
+    items: [
+      { to: '/dormitory/registrations', icon: Building2, label: 'Duyệt đăng ký KTX' },
+    ],
+  },
+  {
     items: [
       { to: '/assessment', icon: Star, label: 'Đánh giá rèn luyện' },
     ],
@@ -100,7 +103,7 @@ const NAV_GROUPS = [
     section: 'lv5',
     items: [
       { to: '/import/students',    icon: Upload,        label: 'Sinh viên' },
-      { to: '/import/profiles',    icon: UserCircle,   label: 'Hồ sơ sinh viên' },
+      { to: '/import/profiles',    icon: UserCircle,    label: 'Hồ sơ sinh viên' },
       { to: '/import/courses',     icon: BookOpen,      label: 'Học phần' },
       { to: '/import/enrollments', icon: ClipboardList, label: 'Đăng ký & Điểm' },
       { to: '/import/schedules',   icon: CalendarDays,  label: 'Thời khóa biểu' },
@@ -118,6 +121,16 @@ const NAV_GROUPS = [
       { to: '/notifications',    icon: Bell,           label: 'Thông báo' },
       { to: '/feedback',         icon: MessageSquare,  label: 'Phản hồi' },
       { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
+    ],
+  },
+  // ── STAFF level 5 restricted: chỉ thấy 3 nav items ──
+  {
+    label: 'Ký túc xá',
+    section: 'lv5_restricted',
+    items: [
+      { to: '/dormitory/registrations', icon: Building2,     label: 'Duyệt đăng ký KTX' },
+      { to: '/import/dormitory',        icon: Upload,        label: 'Import KTX' },
+      { to: '/import/enrollments',      icon: ClipboardList, label: 'Import Đăng ký học phần' },
     ],
   },
 ];
@@ -138,6 +151,11 @@ export default function Sidebar() {
 
   const visibleGroups = NAV_GROUPS.filter(g => canSee(g.section, role, staffLevel));
 
+  // STAFF level 5: chỉ thấy xuất file KTX + học phần (không phải lv5 chung)
+  const isLv5Restricted = role === 'STAFF' && staffLevel === 5;
+  // ADMIN hoặc lv5 thông thường (staffLevel > 5 nếu có): thấy xuất file đầy đủ
+  const showExport = canSee('lv5', role, staffLevel) || isLv5Restricted;
+
   const initials = (user.name || 'A')
     .split(' ')
     .map(w => w[0])
@@ -145,7 +163,6 @@ export default function Sidebar() {
     .join('')
     .toUpperCase();
 
-  // Label vai trò hiển thị ở bottom
   function roleLabel() {
     if (role === 'ADMIN')   return 'Quản trị viên';
     if (role === 'ADVISOR') return 'Cố vấn học tập';
@@ -178,21 +195,17 @@ export default function Sidebar() {
 
       {/* ── Nav groups ── */}
       <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-4">
-      {visibleGroups.map(group => (
+        {visibleGroups.map(group => (
           <div key={group.label}>
-            {/* Section label */}
             {!collapsed && (
               <p className="text-[10px] uppercase tracking-widest text-ink-subtle px-3 mb-1 font-body">
                 {group.label}
               </p>
             )}
-
             {group.items.map(({ to, icon: Icon, label, exact }) => {
-              // Active: exact match for dashboard, startsWith for others
               const isActive = exact
                 ? location.pathname === to
                 : location.pathname.startsWith(to);
-
               return (
                 <NavLink
                   key={to}
@@ -211,8 +224,8 @@ export default function Sidebar() {
           </div>
         ))}
 
-        {/* ── Xuất file (chỉ admin/lv5) ── */}
-        {canSee('lv5', role, staffLevel) && (
+        {/* ── Xuất file ── */}
+        {showExport && (
           <div>
             {!collapsed && (
               <p className="text-[10px] uppercase tracking-widest text-ink-subtle px-3 mb-1 font-body">
@@ -241,14 +254,12 @@ export default function Sidebar() {
 
       {/* ── Bottom: user row + collapse button ── */}
       <div className="border-t border-surface-border dark:border-slate-800">
-        {/* User row */}
         <div
           className={`
             h-14 flex items-center gap-3 px-3 overflow-hidden
             ${collapsed ? 'justify-center' : ''}
           `}
         >
-          {/* Avatar */}
           <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
             <span className="font-display font-semibold text-brand-700 text-xs">{initials}</span>
           </div>
@@ -257,7 +268,7 @@ export default function Sidebar() {
               <p className="text-sm font-medium text-ink truncate leading-tight">
                 {user.name || 'Admin'}
               </p>
-           <p className="text-xs text-ink-subtle truncate">{roleLabel()}</p>
+              <p className="text-xs text-ink-subtle truncate">{roleLabel()}</p>
             </div>
           )}
           {!collapsed && (
@@ -271,7 +282,6 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Collapse toggle */}
         <button
           onClick={() => setCollapsed(c => !c)}
           className="
