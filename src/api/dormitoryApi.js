@@ -9,6 +9,7 @@ export const REG_STATUS = {
   CANCELLED: 'đã hủy',
 };
 
+
 export const REG_STATUS_VARIANT = {
   'chờ duyệt':   'warning',
   'đã duyệt':    'success',
@@ -28,6 +29,7 @@ export const dormitoryAdminApi = {
   listRegistrations: (params) =>
     client.get('/dorm-registrations', { params }),
 
+  
   /**
    * GET /api/v1/dorm-registrations/pending
    * Chỉ lấy đăng ký chờ duyệt
