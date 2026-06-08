@@ -1,17 +1,6 @@
-// src/components/common/Modal.jsx (tạo mới)
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
-/**
- * @param {{
- *   open:      boolean,
- *   onClose:   () => void,
- *   title?:    string,
- *   children:  React.ReactNode,
- *   footer?:   React.ReactNode,
- *   maxWidth?: string,  // Tailwind max-w-* class, default 'max-w-lg'
- * }} props
- */
 export default function Modal({
   open,
   onClose,
@@ -22,7 +11,6 @@ export default function Modal({
 }) {
   const panelRef = useRef(null);
 
-  // Close on Escape
   useEffect(() => {
     if (!open) return;
     const handler = e => { if (e.key === 'Escape') onClose(); };
@@ -30,7 +18,6 @@ export default function Modal({
     return () => document.removeEventListener('keydown', handler);
   }, [open, onClose]);
 
-  // Focus first focusable element on open
   useEffect(() => {
     if (!open) return;
     const el = panelRef.current?.querySelector(
@@ -39,7 +26,6 @@ export default function Modal({
     el?.focus();
   }, [open]);
 
-  // Prevent background scroll
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -49,7 +35,8 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)' }}
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
@@ -57,32 +44,45 @@ export default function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={title ? 'modal-title' : undefined}
-        className={`card dark:bg-slate-900 dark:border-slate-700 w-full ${maxWidth} p-6 animate-in`}
+        className={`w-full ${maxWidth} animate-in`}
+        style={{
+          background: 'var(--modal-bg)',
+          border: '1px solid var(--modal-border)',
+          borderRadius: '20px',
+          boxShadow: 'var(--modal-shadow)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          padding: '24px',
+        }}
       >
-        {/* Header */}
         {title && (
           <div className="flex items-center justify-between mb-5">
             <h2
               id="modal-title"
-              className="font-display font-semibold text-ink dark:text-slate-100 text-[16px]"
+              className="font-display font-semibold text-[16px]"
+              style={{ color: 'var(--text-primary)' }}
             >
               {title}
             </h2>
             <button
               onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-surface-hover text-ink-subtle hover:text-ink transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-lg transition-colors"
+              style={{ color: 'var(--text-subtle)', border: '1px solid var(--card-border)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--nav-hover-bg)'; e.currentTarget.style.color = 'var(--gold-primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-subtle)'; }}
             >
               <X size={16} />
             </button>
           </div>
         )}
 
-        {/* Body */}
         <div>{children}</div>
 
-        {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-2 mt-6 pt-5 border-t border-surface-border dark:border-slate-700">
+          <div
+            className="flex items-center justify-end gap-2 mt-6 pt-5"
+            style={{ borderTop: '1px solid var(--modal-footer-border)' }}
+          >
             {footer}
           </div>
         )}

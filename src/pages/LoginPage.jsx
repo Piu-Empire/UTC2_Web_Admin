@@ -6,8 +6,6 @@ import { authApi } from '../api/authApi';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
-  // FIX: field là studentCode (MSSV), không phải email
   const [studentCode, setStudentCode] = useState('');
   const [password,    setPassword]    = useState('');
   const [showPw,      setShowPw]      = useState(false);
@@ -15,25 +13,22 @@ export default function LoginPage() {
 
   function handleMockLogin() {
     localStorage.setItem('utc2_token', 'mock-token');
-    localStorage.setItem('utc2_user', JSON.stringify({ name: 'Admin UTC2', role: 'ADMIN', email: 'admin@utc2.edu.vn' }));
+    localStorage.setItem('utc2_user', JSON.stringify({
+      name: 'Admin UTC2', role: 'ADMIN', staffLevel: null, email: 'admin@utc2.edu.vn',
+    }));
     navigate('/', { replace: true });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!studentCode || !password) {
-      toast.error('Vui lòng nhập đầy đủ thông tin.', { position: 'top-center' });
+      toast.error('Vui lòng nhập đầy đủ thông tin.');
       return;
     }
-
     setLoading(true);
     try {
-      const res = await authApi.login(studentCode, password);
-      // Backend trả ApiResponse<AuthResponse>:
-      // { code, message, data: { accessToken, tokenType, email, studentCode } }
+      const res  = await authApi.login(studentCode, password);
       const data = res.data?.data ?? res.data;
-
-      // FIX: accessToken (không phải token), email thay cho name
       localStorage.setItem('utc2_token', data.accessToken);
       localStorage.setItem('utc2_user', JSON.stringify({
         name:        data.email?.split('@')[0] ?? data.studentCode ?? 'Admin',
@@ -42,84 +37,113 @@ export default function LoginPage() {
         role:        data.role ?? 'ADMIN',
         staffLevel:  data.staffLevel ?? null,
       }));
-
-      // Redirect theo role: lv1 không có dashboard → thẳng vào đánh giá
       const role       = data.role ?? 'ADMIN';
       const staffLevel = data.staffLevel ?? null;
-      const to = (role === 'STAFF' && staffLevel === 1) ? '/assessment' : '/';
-      navigate(to, { replace: true });
+      navigate((role === 'STAFF' && staffLevel === 1) ? '/assessment' : '/', { replace: true });
     } catch (err) {
       const msg = err.response?.data?.message || 'Đăng nhập thất bại. Kiểm tra lại tài khoản.';
-      toast.error(msg, { position: 'top-center' });
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="flex h-screen font-body">
-      <Toaster position="top-center" />
+    <div
+      className="flex h-screen font-body"
+      style={{ background: 'var(--bg-app-radial), var(--bg-app)' }}
+    >
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'var(--toast-bg)',
+            color: 'var(--toast-color)',
+            border: '1px solid var(--toast-border)',
+          },
+        }}
+      />
 
-      {/* ── Left panel ─────────────────────────────── */}
+      {/* Left decorative panel */}
       <div
         className="hidden md:flex w-[45%] flex-col items-center justify-center px-12 relative overflow-hidden"
-        style={{ background: '#1e3a8a' }}
+        style={{
+          borderRight: '1px solid var(--sidebar-border)',
+          background: 'var(--sidebar-bg)',
+        }}
       >
-        {/* Decorative grid */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg,   transparent, transparent 39px, rgba(255,255,255,0.05) 40px),
-              repeating-linear-gradient(90deg,  transparent, transparent 39px, rgba(255,255,255,0.05) 40px)
-            `,
-          }}
-        />
+        {/* Decorative orbs */}
+        <div style={{
+          position: 'absolute', top: '15%', left: '20%',
+          width: 220, height: 220, borderRadius: '50%',
+          background: 'radial-gradient(circle, var(--avatar-bg) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: '20%', right: '15%',
+          width: 160, height: 160, borderRadius: '50%',
+          background: 'radial-gradient(circle, var(--avatar-bg) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
 
         <div className="relative z-10 text-center">
-          <div className="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center mx-auto">
-            <span className="font-display font-bold text-white text-2xl leading-none">U</span>
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
+            style={{ background: 'var(--logo-bg)', boxShadow: 'var(--logo-shadow)' }}
+          >
+            <span className="font-display font-bold text-white text-3xl leading-none">U</span>
           </div>
-          <h2 className="font-display font-bold text-white text-2xl mt-4">UTC2</h2>
-          <p className="font-body font-light text-white/80 text-sm mt-2 max-w-[260px] leading-relaxed">
-            Quản trị hệ thống sinh viên UTC2
+
+          <h2 className="font-display font-bold text-3xl mt-5 text-gold">UTC2</h2>
+          <p className="text-sm mt-2 max-w-[240px] leading-relaxed mx-auto" style={{ color: 'var(--text-subtle)' }}>
+            Hệ thống quản trị sinh viên UTC2
           </p>
 
           <div className="mt-12 space-y-3 text-left">
             {[
               { n: '12,000+', label: 'Sinh viên đang theo học' },
               { n: '500+',    label: 'Học phần trong hệ thống' },
-              { n: '6',       label: 'Khoa & bộ môn' },
+              { n: '6',       label: 'Khoa & bộ môn'           },
             ].map(({ n, label }) => (
-              <div key={n} className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3">
-                <span className="font-display font-bold text-white text-lg w-16">{n}</span>
-                <span className="text-white/70 text-sm">{label}</span>
+              <div
+                key={n}
+                className="flex items-center gap-3 rounded-xl px-4 py-3"
+                style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)' }}
+              >
+                <span className="font-display font-bold text-lg w-16" style={{ color: 'var(--gold-primary)' }}>
+                  {n}
+                </span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>{label}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Right panel ────────────────────────────── */}
-      <div className="flex-1 bg-white flex items-center justify-center px-6">
-        <div className="w-full max-w-sm py-16">
+      {/* Right login panel */}
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="flex items-center gap-2 mb-8 md:hidden">
-            <div className="w-8 h-8 rounded-lg bg-brand-700 flex items-center justify-center">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--logo-bg)' }}
+            >
               <span className="font-display font-bold text-white text-base leading-none">U</span>
             </div>
-            <span className="font-display font-bold text-ink text-lg">UTC2 Admin</span>
+            <span className="font-display font-bold text-lg text-gold">UTC2 Admin</span>
           </div>
 
-          <h1 className="font-display font-bold text-2xl text-ink">Đăng nhập</h1>
-          <p className="text-sm text-ink-muted mt-1 mb-8">
+          <h1 className="font-display font-bold text-2xl" style={{ color: 'var(--text-primary)' }}>
+            Đăng nhập
+          </h1>
+          <p className="text-sm mt-1 mb-8" style={{ color: 'var(--text-subtle)' }}>
             Chỉ dành cho quản trị viên hệ thống
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email hoặc MSSV */}
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
                 Email hoặc MSSV
               </label>
               <input
@@ -129,18 +153,12 @@ export default function LoginPage() {
                 placeholder="VD: admin@utc2.edu.vn hoặc 2211020001"
                 autoComplete="username"
                 disabled={loading}
-                className="
-                  border border-surface-border rounded-lg px-3 py-2.5
-                  text-sm w-full text-ink placeholder:text-ink-subtle
-                  focus:outline-none focus:ring-2 focus:ring-brand-500
-                  disabled:opacity-50
-                "
+                className="w-full px-3.5 py-2.5 text-sm"
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-ink mb-1.5">
+              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--text-muted)' }}>
                 Mật khẩu
               </label>
               <div className="relative">
@@ -151,21 +169,16 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   disabled={loading}
-                  className="
-                    border border-surface-border rounded-lg px-3 py-2.5 pr-10
-                    text-sm w-full text-ink placeholder:text-ink-subtle
-                    focus:outline-none focus:ring-2 focus:ring-brand-500
-                    disabled:opacity-50
-                  "
+                  className="w-full px-3.5 py-2.5 text-sm pr-10"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(s => !s)}
                   tabIndex={-1}
-                  className="
-                    absolute right-3 top-1/2 -translate-y-1/2
-                    text-ink-subtle hover:text-ink transition-colors
-                  "
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: 'var(--text-subtle)' }}
+                  onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-primary)'}
+                  onMouseLeave={e => e.currentTarget.style.color = 'var(--text-subtle)'}
                 >
                   {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -175,28 +188,40 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="
-                w-full bg-brand-600 hover:bg-brand-700 text-white
-                font-medium py-2.5 rounded-lg text-sm
-                transition-colors flex items-center justify-center gap-2
-                disabled:opacity-60 disabled:cursor-not-allowed mt-2
-              "
+              className="w-full flex items-center justify-center gap-2 font-medium text-sm py-2.5 rounded-[10px] mt-2 transition-all"
+              style={{
+                background: loading ? 'rgba(217,119,6,0.5)' : 'var(--btn-primary-bg)',
+                color: '#fff',
+                border: '1px solid var(--btn-primary-border)',
+                boxShadow: loading ? 'none' : 'var(--btn-primary-shadow)',
+                cursor: loading ? 'not-allowed' : 'pointer',
+              }}
+              onMouseEnter={e => { if (!loading) e.currentTarget.style.filter = 'brightness(1.12)'; }}
+              onMouseLeave={e => { e.currentTarget.style.filter = 'brightness(1)'; }}
             >
-              {loading && <Loader2 size={16} className="animate-spin" />}
+              {loading && <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />}
               {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
             </button>
           </form>
 
-          {/* Mock login for dev */}
-          <div className="mt-4 pt-4 border-t border-surface-border">
+          <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
             <button
               type="button"
               onClick={handleMockLogin}
-              className="w-full py-2.5 rounded-lg text-sm font-medium border border-dashed border-amber-400 text-amber-600 hover:bg-amber-50 transition-colors"
+              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                border: '1px dashed var(--avatar-border)',
+                color: 'var(--gold-primary)',
+                background: 'transparent',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--nav-hover-bg)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               🚧 Đăng nhập thử (Mock)
             </button>
-            <p className="text-xs text-ink-subtle text-center mt-2">Dùng khi backend chưa chạy</p>
+            <p className="text-xs text-center mt-2" style={{ color: 'var(--text-subtle)' }}>
+              Dùng khi backend chưa chạy
+            </p>
           </div>
         </div>
       </div>

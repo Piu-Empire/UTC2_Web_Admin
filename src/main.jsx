@@ -4,9 +4,13 @@ import { Toaster } from 'react-hot-toast';
 import App from './App.jsx';
 import './index.css';
 
-// Restore dark mode preference
+// Restore theme — default là dark mode
 const saved = localStorage.getItem('utc2_dark');
-if (saved === 'true') document.documentElement.classList.add('dark');
+if (saved === null || saved === 'true') {
+  document.documentElement.classList.add('dark');
+} else {
+  document.documentElement.classList.remove('dark');
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

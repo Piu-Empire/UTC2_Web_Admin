@@ -1,18 +1,18 @@
 import client from './axiosClient';
 
-// ── Status mapping: khớp với DB cột `status` (tiếng Việt) ──────────
+// ── Status mapping: khớp với backend enum PENDING|PROCESSING|COMPLETED|REJECTED ──
 export const STATUS_LABEL = {
-    'chờ xử lý': 'Chờ xử lý',
-    'đang xử lý': 'Đang xử lý',
-    'hoàn thành': 'Hoàn thành',
-    'từ chối': 'Từ chối',
+    'PENDING':    'Chờ xử lý',
+    'PROCESSING': 'Đang xử lý',
+    'COMPLETED':  'Hoàn thành',
+    'REJECTED':   'Từ chối',
 };
 
 export const STATUS_VARIANT = {
-    'chờ xử lý': 'warning',
-    'đang xử lý': 'info',
-    'hoàn thành': 'success',
-    'từ chối': 'error',
+    'PENDING':    'warning',
+    'PROCESSING': 'info',
+    'COMPLETED':  'success',
+    'REJECTED':   'error',
 };
 
 export const ALL_STATUSES = Object.keys(STATUS_LABEL);
