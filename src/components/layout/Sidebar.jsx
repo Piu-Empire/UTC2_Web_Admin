@@ -74,9 +74,9 @@ const NAV_GROUPS = [
     label: 'Học thuật',
     section: 'academic_advanced',
     items: [
-      { to: '/academic/leaderboard',  icon: Trophy,      label: 'Bảng xếp hạng' },
-      { to: '/academic/scholarships', icon: Award,       label: 'Học bổng' },
-      { to: '/academic/warnings',     icon: ShieldAlert, label: 'Cảnh báo học vụ' },
+      { to: '/academic/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' },
+      { to: '/academic/scholarships', icon: Award, label: 'Học bổng' },
+      { to: '/academic/warnings', icon: ShieldAlert, label: 'Cảnh báo học vụ' },
     ],
   },
   {
@@ -96,30 +96,30 @@ const NAV_GROUPS = [
     section: 'lv5',
     items: [
       { to: '/students', icon: Users, label: 'Sinh viên' },
+      { to: '/schedules', icon: CalendarDays, label: 'Thời khóa biểu' },
     ],
   },
   {
     label: 'Import',
     section: 'lv5',
     items: [
-      { to: '/import/students',    icon: Upload,        label: 'Sinh viên' },
-      { to: '/import/profiles',    icon: UserCircle,    label: 'Hồ sơ sinh viên' },
-      { to: '/import/courses',     icon: BookOpen,      label: 'Học phần' },
+      { to: '/import/students', icon: Upload, label: 'Sinh viên' },
+      { to: '/import/profiles', icon: UserCircle, label: 'Hồ sơ sinh viên' },
+      { to: '/import/courses', icon: BookOpen, label: 'Học phần' },
       { to: '/import/enrollments', icon: ClipboardList, label: 'Đăng ký & Điểm' },
-      { to: '/import/schedules',   icon: CalendarDays,  label: 'Thời khóa biểu' },
-      { to: '/import/fees',        icon: Wallet,        label: 'Học phí' },
-      { to: '/import/curriculum',  icon: GraduationCap, label: 'Chương trình ĐT' },
-      { to: '/import/dormitory',   icon: Building2,     label: 'Ký túc xá' },
+      { to: '/import/fees', icon: Wallet, label: 'Học phí' },
+      { to: '/import/curriculum', icon: GraduationCap, label: 'Chương trình ĐT' },
+      { to: '/import/dormitory', icon: Building2, label: 'Ký túc xá' },
     ],
   },
   {
     label: 'Tiện ích',
     section: 'lv5',
     items: [
-      { to: '/academic',         icon: BarChart2,      label: 'Kết quả học tập' },
-      { to: '/assessment',       icon: Star,           label: 'Đánh giá rèn luyện' },
-      { to: '/notifications',    icon: Bell,           label: 'Thông báo' },
-      { to: '/feedback',         icon: MessageSquare,  label: 'Phản hồi' },
+      { to: '/academic', icon: BarChart2, label: 'Kết quả học tập' },
+      { to: '/assessment', icon: Star, label: 'Đánh giá rèn luyện' },
+      { to: '/notifications', icon: Bell, label: 'Thông báo' },
+      { to: '/feedback', icon: MessageSquare, label: 'Phản hồi' },
       { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
     ],
   },
@@ -128,9 +128,9 @@ const NAV_GROUPS = [
     label: 'Ký túc xá',
     section: 'lv5_restricted',
     items: [
-      { to: '/dormitory/registrations', icon: Building2,     label: 'Duyệt đăng ký KTX' },
-      { to: '/import/dormitory',        icon: Upload,        label: 'Import KTX' },
-      { to: '/import/enrollments',      icon: ClipboardList, label: 'Import Đăng ký học phần' },
+      { to: '/dormitory/registrations', icon: Building2, label: 'Duyệt đăng ký KTX' },
+      { to: '/import/dormitory', icon: Upload, label: 'Import KTX' },
+      { to: '/import/enrollments', icon: ClipboardList, label: 'Import Đăng ký học phần' },
     ],
   },
 ];
@@ -164,7 +164,7 @@ export default function Sidebar() {
     .toUpperCase();
 
   function roleLabel() {
-    if (role === 'ADMIN')   return 'Quản trị viên';
+    if (role === 'ADMIN') return 'Quản trị viên';
     if (role === 'ADVISOR') return 'Cố vấn học tập';
     if (role === 'STAFF') {
       const map = { 1: 'Tập thể lớp', 2: 'Giảng viên', 3: 'Bộ môn', 4: 'Khoa', 5: 'Phòng giáo vụ' };

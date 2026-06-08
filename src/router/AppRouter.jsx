@@ -16,6 +16,12 @@ import FeedbackPage            from '../pages/FeedbackPage';
 import ServiceRequestPage           from '../pages/ServiceRequestPage';
 import DormitoryRegistrationPage   from '../pages/dormitory/DormitoryRegistrationPage';
 
+// Schedules
+import ScheduleListPage from '../pages/schedules/ScheduleListPage';
+import ImportSchedulePage from '../pages/schedules/ImportSchedulePage';
+import ExportSchedulePage from '../pages/schedules/ExportSchedulePage';
+import ScheduleFormPage from '../pages/schedules/ScheduleFormPage';
+
 // Academic pages
 import AcademicResultPage      from '../pages/academic/AcademicResultPage';
 import GradesPage              from '../pages/academic/GradesPage';
@@ -53,6 +59,14 @@ export default function AppRouter() {
           <Route path="students">
             <Route index element={<StudentListPage />} />
             <Route path=":id" element={<StudentDetailPage />} />
+          </Route>
+
+          <Route path="schedules">
+            <Route index element={<ScheduleListPage />} />
+            <Route path="import" element={<ImportSchedulePage />} />
+            <Route path="export" element={<ExportSchedulePage />} />
+            <Route path="create" element={<ScheduleFormPage />} />
+            <Route path=":id" element={<ScheduleFormPage />} />
           </Route>
 
           <Route path="academic">
