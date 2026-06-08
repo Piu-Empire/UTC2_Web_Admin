@@ -21,18 +21,27 @@ export default function UploadProgress({ file, totalRows, onComplete, uploadFn }
     let cancelled = false;
     async function run() {
       try {
-        const result = await uploadFn(p => {
+        const response = await uploadFn(p => {
           if (!cancelled) setPct(p);
         });
         if (!cancelled) {
           setPct(100);
           setDone(true);
+          // Server returns ApiResponse<ImportResultDto>: { success, data: { success, failed, errors } }
+          const payload = response?.data?.data ?? response?.data ?? response;
+          // Normalize to { success, failed, errors }
+          const normalized = {
+            success: payload?.success ?? 0,
+            failed: payload?.failed ?? 0,
+            errors: payload?.errors ?? [],
+          };
           // Brief pause so user sees the 100% state
-          setTimeout(() => { if (!cancelled) onComplete(result); }, 900);
+          setTimeout(() => { if (!cancelled) onComplete(normalized); }, 900);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err.response?.data?.message ?? 'Tải lên thất bại. Vui lòng thử lại.');
+          const serverMsg = err.response?.data?.message ?? err.response?.data?.error ?? null;
+          setError(serverMsg ?? 'Tải lên thất bại. Vui lòng thử lại.');
         }
       }
     }
