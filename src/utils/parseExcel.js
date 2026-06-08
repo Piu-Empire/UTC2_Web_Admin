@@ -1,7 +1,18 @@
-// src/utils/parseExcel.js
 import * as XLSX from 'xlsx';
 
-export async function parseExcelFile(file, requiredCols = []) {
+const normalizeHeader = (str) => {
+    if (!str) return '';
+    return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[đĐ]/g, 'd')
+        .replace(/\*/g, '')
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, ' ');
+};
+
+export async function parseExcelFile(file, requiredCols = [], headerRow = null) {
 
     const buffer = await file.arrayBuffer();
 
@@ -15,7 +26,7 @@ export async function parseExcelFile(file, requiredCols = []) {
     const raw = XLSX.utils.sheet_to_json(ws, {
         header: 1,
         defval: '',
-        blankrows: false
+        blankrows: true
     });
 
     if (!raw || raw.length < 1) {
@@ -31,8 +42,26 @@ export async function parseExcelFile(file, requiredCols = []) {
         };
     }
 
+    // Format any Date cells to dd/MM/yyyy
+    for (let i = 0; i < raw.length; i++) {
+        if (!raw[i]) continue;
+        for (let j = 0; j < raw[i].length; j++) {
+            if (raw[i][j] instanceof Date) {
+                const d = raw[i][j];
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = d.getFullYear();
+                raw[i][j] = `${day}/${month}/${year}`;
+            }
+        }
+    }
+
+    let resolvedHeaderRow = (headerRow !== undefined && headerRow !== null) ? headerRow : 7;
+
+    if (!raw[resolvedHeaderRow]) resolvedHeaderRow = 0;
+
     // FIX BOM
-    const headers = raw[0].map(h => {
+    const headers = (raw[resolvedHeaderRow] || []).map(h => {
         const value =
             h !== undefined &&
             h !== null ?
@@ -44,21 +73,35 @@ export async function parseExcelFile(file, requiredCols = []) {
             .trim();
     });
 
-    const dataRows = raw
-        .slice(1)
-        .filter(row =>
-            row.some(cell => {
+    const lopHpIdx = headers.findIndex(h => normalizeHeader(h) === 'lop hoc phan');
+    const maHpIdx = headers.findIndex(h => normalizeHeader(h) === 'ma hp' || normalizeHeader(h) === 'ma hoc phan');
 
+    const dataRows = raw
+        .slice(resolvedHeaderRow + 1)
+        .filter(row => {
+            const hasAnyVal = row.some(cell => {
                 const value =
                     cell !== undefined &&
                     cell !== null ?
                     cell :
                     '';
+                return String(value).trim() !== '';
+            });
+            if (!hasAnyVal) return false;
 
-                return String(value)
-                    .trim() !== '';
-            })
-        );
+            if (lopHpIdx !== -1) {
+                const val = row[lopHpIdx];
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    return false;
+                }
+            } else if (maHpIdx !== -1) {
+                const val = row[maHpIdx];
+                if (val === undefined || val === null || String(val).trim() === '') {
+                    return false;
+                }
+            }
+            return true;
+        });
 
     console.log(headers);
     console.log("FIRST DATA ROW =", dataRows[0]);
@@ -70,8 +113,7 @@ export async function parseExcelFile(file, requiredCols = []) {
         req =>
         !headers.some(
             h =>
-            h.toLowerCase().trim() ===
-            req.toLowerCase().trim()
+            normalizeHeader(h) === normalizeHeader(req)
         )
     );
 
@@ -99,12 +141,12 @@ export async function parseExcelFile(file, requiredCols = []) {
 
             obj[header] = val;
 
+            const normalizedName = normalizeHeader(header);
             const isRequired =
                 requiredCols.some(
                     rc =>
-                    rc.toLowerCase() ===
-                    header.toLowerCase()
-                );
+                    normalizeHeader(rc) === normalizedName
+                ) && !['phong hoc', 'phong', 'phong thi', 'ngay bd', 'ngay bat dau', 'ngay kt', 'ngay ket thuc', 'ngay thi', 'giao vien', 'giang vien', 'nhom kiem soat', 'ghi chu', 'gio thi', 'gio thi 1'].includes(normalizedName);
 
             if (
                 isRequired &&

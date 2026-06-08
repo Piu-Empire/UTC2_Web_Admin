@@ -64,9 +64,21 @@ export default function PreviewTable({
 
             {headers.map((h, ci) => {
               const isMissing  = missingCols.includes(h);
+              const normalize = (str) => {
+                if (!str) return '';
+                return String(str)
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/[đĐ]/g, 'd')
+                  .replace(/\*/g, '')
+                  .toLowerCase()
+                  .trim()
+                  .replace(/\s+/g, ' ');
+              };
+              const normalizedName = normalize(h);
               const isRequired = requiredCols.some(
-                rc => rc.toLowerCase() === h.toLowerCase()
-              );
+                rc => normalize(rc) === normalizedName
+              ) && !['phong hoc', 'phong', 'phong thi', 'ngay bd', 'ngay bat dau', 'ngay kt', 'ngay ket thuc', 'ngay thi', 'giao vien', 'giang vien', 'nhom kiem soat', 'ghi chu', 'gio thi', 'gio thi 1'].includes(normalizedName);
               return (
                 <th
                   key={ci}

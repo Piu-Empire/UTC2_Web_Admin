@@ -23,18 +23,21 @@ const SCHEDULE_TYPES = {
   '1': {
     label: 'Lịch học',
     sample: '/samples/schedule-study-sample.xlsx',
-    cols: ['course_code', 'semester_id', 'day_of_week', 'start_period', 'end_period', 'start_time', 'end_time', 'room', 'building', 'lecturer_id', 'week_start', 'week_end', 'notes']
+    headerRow: 7,
+    cols: ['Mã HP', 'Lớp học phần', 'Thứ', 'Tiết học', 'Số tiết', 'Phòng học', 'Ngày BD', 'Ngày KT', 'Giáo viên']
   },
   '2': {
     label: 'Lịch thi',
     sample: '/samples/schedule-exam-sample.xlsx',
-    cols: ['course_code', 'semester_id', 'event_date', 'start_time', 'end_time', 'room', 'building', 'notes']
+    headerRow: 7,
+    cols: ['MÃ HỌC PHẦN', 'LỚP HỌC PHẦN', 'NGÀY THI', 'GIỜ THI', 'PHÒNG THI']
   },
   '3': {
     label: 'Lịch thi lại',
     sample: '/samples/schedule-reexam-sample.xlsx',
-    cols: ['course_code', 'semester_id', 'event_date', 'start_time', 'end_time', 'room', 'building', 'notes']
-  }
+    headerRow: 7,
+    cols: ['MÃ HỌC PHẦN', 'LỚP HỌC PHẦN', 'NGÀY THI', 'GIỜ THI', 'PHÒNG THI']
+  },
 };
 
 export default function ImportSchedulePage() {
@@ -60,10 +63,10 @@ export default function ImportSchedulePage() {
   useEffect(() => {
     if (!file) { setParsed(EMPTY_PARSE); return; }
     setParsing(true);
-    parseExcelFile(file, currentConfig.cols)
+    parseExcelFile(file, currentConfig.cols, currentConfig.headerRow)
       .then(p => setParsed(p))
       .finally(() => setParsing(false));
-  }, [file, currentConfig.cols]);
+  }, [file, currentConfig.cols, currentConfig.headerRow]);
 
   function handleFileSelect(f) {
     setFile(f);
