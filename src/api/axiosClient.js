@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 const client = axios.create({
-    baseURL: '/api/v1', // FIX: đổi từ /api/v1.0 → /api/v1 cho đúng backend
+    baseURL: `${API_URL}/api/v1`, // FIX: đổi từ /api/v1.0 → /api/v1 cho đúng backend
 });
 
 // Attach JWT token to every request
