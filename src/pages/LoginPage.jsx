@@ -7,17 +7,9 @@ import { authApi } from '../api/authApi';
 export default function LoginPage() {
   const navigate = useNavigate();
   const [studentCode, setStudentCode] = useState('');
-  const [password,    setPassword]    = useState('');
-  const [showPw,      setShowPw]      = useState(false);
-  const [loading,     setLoading]     = useState(false);
-
-  function handleMockLogin() {
-    localStorage.setItem('utc2_token', 'mock-token');
-    localStorage.setItem('utc2_user', JSON.stringify({
-      name: 'Admin UTC2', role: 'ADMIN', staffLevel: null, email: 'admin@utc2.edu.vn',
-    }));
-    navigate('/', { replace: true });
-  }
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -27,17 +19,17 @@ export default function LoginPage() {
     }
     setLoading(true);
     try {
-      const res  = await authApi.login(studentCode, password);
+      const res = await authApi.login(studentCode, password);
       const data = res.data?.data ?? res.data;
       localStorage.setItem('utc2_token', data.accessToken);
       localStorage.setItem('utc2_user', JSON.stringify({
-        name:        data.email?.split('@')[0] ?? data.studentCode ?? 'Admin',
-        email:       data.email,
+        name: data.email?.split('@')[0] ?? data.studentCode ?? 'Admin',
+        email: data.email,
         studentCode: data.studentCode,
-        role:        data.role ?? 'ADMIN',
-        staffLevel:  data.staffLevel ?? null,
+        role: data.role ?? 'ADMIN',
+        staffLevel: data.staffLevel ?? null,
       }));
-      const role       = data.role ?? 'ADMIN';
+      const role = data.role ?? 'ADMIN';
       const staffLevel = data.staffLevel ?? null;
       navigate((role === 'STAFF' && staffLevel === 1) ? '/assessment' : '/', { replace: true });
     } catch (err) {
@@ -102,8 +94,8 @@ export default function LoginPage() {
           <div className="mt-12 space-y-3 text-left">
             {[
               { n: '12,000+', label: 'Sinh viên đang theo học' },
-              { n: '500+',    label: 'Học phần trong hệ thống' },
-              { n: '6',       label: 'Khoa & bộ môn'           },
+              { n: '500+', label: 'Học phần trong hệ thống' },
+              { n: '6', label: 'Khoa & bộ môn' },
             ].map(({ n, label }) => (
               <div
                 key={n}
@@ -204,25 +196,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--card-border)' }}>
-            <button
-              type="button"
-              onClick={handleMockLogin}
-              className="w-full py-2.5 rounded-lg text-sm font-medium transition-colors"
-              style={{
-                border: '1px dashed var(--avatar-border)',
-                color: 'var(--gold-primary)',
-                background: 'transparent',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--nav-hover-bg)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              🚧 Đăng nhập thử (Mock)
-            </button>
-            <p className="text-xs text-center mt-2" style={{ color: 'var(--text-subtle)' }}>
-              Dùng khi backend chưa chạy
-            </p>
-          </div>
         </div>
       </div>
     </div>
