@@ -22,8 +22,7 @@ import {
   ShieldAlert,
   Star,
   Pencil,
-  CheckSquare,
-  Building2,
+    Building2,
   UserCircle,
   Download,
 } from 'lucide-react';
@@ -65,9 +64,6 @@ function buildNavGroups(role, staffLevel) {
 
   if (isAdmin || (isStaff && lv >= 5))
     qlItems.push({ to: '/academic/teacher-courses', icon: Users, label: 'Phân công giảng viên' });
-
-  if (isAdmin || (isStaff && lv >= 5))
-    qlItems.push({ to: '/academic/approval', icon: CheckSquare, label: 'Duyệt dữ liệu' });
 
   if (isAdmin || isAdvisor || (isStaff && lv >= 3))
     qlItems.push({ to: '/academic/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' });
@@ -112,7 +108,7 @@ function buildNavGroups(role, staffLevel) {
       importItems.push({ to: '/import/fees',       icon: Wallet,        label: 'Học phí'          });
       importItems.push({ to: '/import/curriculum', icon: GraduationCap, label: 'Chương trình ĐT' });
     }
-    
+
     if (isAdmin || (isStaff && lv >= 5))
       importItems.push({
         to: '/import/dormitory',
