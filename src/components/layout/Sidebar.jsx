@@ -33,6 +33,11 @@ function getUser() {
   catch { return {}; }
 }
 
+function canSee(level, role, lv) {
+  if (level === 'lv5') return role === 'ADMIN' || (role === 'STAFF' && lv >= 5);
+  return false;
+}
+
 function buildNavGroups(role, staffLevel) {
   const isAdmin   = role === 'ADMIN';
   const isAdvisor = role === 'ADVISOR';
