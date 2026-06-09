@@ -63,6 +63,11 @@ export default function AppRouter() {
         <Route path="/" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<DashboardPage />} />
 
+          <Route path="students">
+            <Route index element={<StudentListPage />} />
+            <Route path=":id" element={<StudentDetailPage />} />
+          </Route>
+
           <Route path="import">
             <Route path="students" element={<ImportStudentPage />} />
             <Route path="courses" element={<ImportCoursePage />} />
