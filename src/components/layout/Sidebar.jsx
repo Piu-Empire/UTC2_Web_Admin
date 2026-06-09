@@ -168,7 +168,7 @@ export default function Sidebar() {
   // STAFF level 5: chỉ thấy xuất file KTX + học phần (không phải lv5 chung)
   const isLv5Restricted = role === 'STAFF' && staffLevel === 5;
   // ADMIN hoặc lv5 thông thường (staffLevel > 5 nếu có): thấy xuất file đầy đủ
-  const showExport = canSee('lv5', role, staffLevel) || isLv5Restricted;
+  const showExport = role === 'ADMIN' || (role === 'STAFF' && staffLevel >= 5) || isLv5Restricted;
 
   const initials = (user.name || 'A')
     .split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
