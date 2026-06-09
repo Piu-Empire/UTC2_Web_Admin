@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || '';
-
 const client = axios.create({
-    baseURL: `${API_URL}/api/v1`, // FIX: đổi từ /api/v1.0 → /api/v1 cho đúng backend
+    baseURL: '/api/v1', // Luôn dùng đường dẫn tương đối để đi qua Proxy (Vite local hoặc Vercel production)
 });
 
 // Attach JWT token to every request
