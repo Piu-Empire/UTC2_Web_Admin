@@ -124,7 +124,7 @@ function buildNavGroups(role, staffLevel) {
 
   }
   // ── Ký túc xá ──────────────────────────────────────────────────────────
-  if (isAdmin || isAdvisor || (isStaff && lv >= 1)) {
+  if (isAdmin || isAdvisor || (isStaff && lv >= 5)) {
     groups.push({
       label: 'Ký túc xá',
       items: [
