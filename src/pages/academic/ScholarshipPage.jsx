@@ -34,22 +34,22 @@ function scholarshipLabel(status) {
 
 // ── Form thêm thủ công ────────────────────────────────────────────────
 function AddScholarshipForm({ onDone }) {
-  const [form, setForm] = useState({ userId: '', scholarshipId: '', semesterId: '' });
+  const [form, setForm] = useState({ studentCode: '', scholarshipId: '', semesterId: '' });
   const [saving, setSaving] = useState(false);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
 
   async function handleSubmit() {
-    if (!form.userId || !form.scholarshipId) return alert('Nhập đủ User ID và Scholarship ID');
+    if (!form.studentCode || !form.scholarshipId) return alert('Nhập đủ MSSV và Scholarship ID');
     setSaving(true);
     try {
       await academicApi.upsertScholarship({
-        userId: Number(form.userId),
+        studentCode: form.studentCode.trim(),
         scholarshipId: Number(form.scholarshipId),
         semesterId: form.semesterId ? Number(form.semesterId) : null,
         status: 'pending',
       });
-      setForm({ userId: '', scholarshipId: '', semesterId: '' });
+      setForm({ studentCode: '', scholarshipId: '', semesterId: '' });
       onDone();
     } catch (e) { alert('Lỗi: ' + (e?.response?.data?.message ?? e.message)); }
     finally { setSaving(false); }
@@ -60,8 +60,8 @@ function AddScholarshipForm({ onDone }) {
       <p className="text-sm font-medium text-ink">Thêm học bổng thủ công</p>
       <div className="grid grid-cols-3 gap-3">
         <div>
-          <label className="text-xs text-ink-subtle mb-1 block">User ID sinh viên *</label>
-          <input value={form.userId} onChange={e => set('userId', e.target.value)} placeholder="VD: 1001" className={INPUT}/>
+          <label className="text-xs text-ink-subtle mb-1 block">MSSV sinh viên *</label>
+          <input value={form.studentCode} onChange={e => set('studentCode', e.target.value)} placeholder="VD: 60510..." className={INPUT}/>
         </div>
         <div>
           <label className="text-xs text-ink-subtle mb-1 block">Scholarship ID *</label>
@@ -82,51 +82,36 @@ function AddScholarshipForm({ onDone }) {
   );
 }
 
-// ── Import file ───────────────────────────────────────────────────────
-function ImportScholarshipSection({ onDone }) {
-  const fileRef = useRef();
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState(null);
+// ── Export file ───────────────────────────────────────────────────────
+function ExportScholarshipSection() {
+  const [downloading, setDownloading] = useState(false);
+  const [mssv, setMssv] = useState('');
 
-  async function handleUpload() {
-    if (!file) return;
-    setUploading(true);
-    setResult(null);
+  async function handleExport() {
+    setDownloading(true);
     try {
-      const res = await uploadImportScholarships(file, true);
-      setResult(res);
-      setFile(null);
-      onDone();
+      const res = await academicApi.exportScholarships(mssv.trim() || undefined);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'scholarships.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (e) { alert('Lỗi: ' + (e?.response?.data?.message ?? e.message)); }
-    finally { setUploading(false); }
+    finally { setDownloading(false); }
   }
 
   return (
     <div className="card p-4 space-y-3">
-      <p className="text-sm font-medium text-ink">Import file học bổng</p>
-      <p className="text-xs text-ink-subtle">
-        File Excel/CSV, header ở dòng 1. Cột bắt buộc: <code className="bg-slate-100 px-1 rounded">student_code</code>, <code className="bg-slate-100 px-1 rounded">scholarship_name</code>. Tuỳ chọn: <code className="bg-slate-100 px-1 rounded">semester_id</code>
-      </p>
+      <p className="text-sm font-medium text-ink">Xuất file Excel/CSV học bổng</p>
       <div className="flex items-center gap-3">
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
-          onChange={e => setFile(e.target.files?.[0] ?? null)}/>
-        <button onClick={() => fileRef.current?.click()}
-          className="px-3 py-2 border border-surface-border rounded-lg text-sm text-ink-subtle hover:bg-slate-50 transition-colors">
-          {file ? file.name : 'Chọn file...'}
+        <input value={mssv} onChange={e => setMssv(e.target.value)} placeholder="Nhập MSSV (để trống nếu muốn xuất tất cả)" className={`${INPUT} max-w-sm`}/>
+        <button onClick={handleExport} disabled={downloading}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors">
+          <Upload size={14} className="rotate-180" /> {downloading ? 'Đang tải...' : 'Xuất dữ liệu'}
         </button>
-        {file && (
-          <button onClick={handleUpload} disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors">
-            <Upload size={14}/> {uploading ? 'Đang tải...' : 'Tải lên'}
-          </button>
-        )}
       </div>
-      {result && (
-        <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-          ✓ Thành công: {result.success} dòng{result.failed > 0 ? ` | Lỗi: ${result.failed} dòng` : ''}
-        </div>
-      )}
     </div>
   );
 }
@@ -159,7 +144,7 @@ function PendingApprovalSection({ onRefresh }) {
   return (
     <div className="card overflow-hidden">
       <div className="px-4 py-3 bg-amber-50 border-b border-amber-200">
-        <p className="text-sm font-medium text-amber-800">Chờ duyệt ({list.length})</p>
+        <p className="text-sm font-medium text-amber-800">Quản lý duyệt và trao học bổng ({list.length})</p>
       </div>
       <table className="w-full text-sm">
         <thead className="bg-slate-50 text-ink-subtle text-xs uppercase">
@@ -228,11 +213,11 @@ export default function ScholarshipPage() {
         <p className="text-sm text-ink-subtle mt-0.5">Quản lý học bổng sinh viên</p>
       </div>
 
-      {/* Thêm/import — lv3+ và advisor */}
+      {/* Thêm/export — lv3+ và advisor */}
       {canAdd(role, lv) && (
         <div className="space-y-3">
           <AddScholarshipForm onDone={refresh}/>
-          <ImportScholarshipSection onDone={refresh}/>
+          <ExportScholarshipSection />
         </div>
       )}
 

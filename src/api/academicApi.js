@@ -8,6 +8,10 @@ export const academicApi = {
   getScholarships:(userId)                    => client.get('/academic/scholarships', { params: { userId } }),
   getWarnings:    (userId, semesterId)        => client.get('/academic/warnings',     { params: { userId, semesterId } }),
 
+  // ── Export ────────────────────────────────────────────────────────────
+  exportScholarships: (userId)                => client.get('/academic/scholarships/export', { params: { userId }, responseType: 'blob' }),
+  exportWarnings:     (userId, semesterId)    => client.get('/academic/warnings/export', { params: { userId, semesterId }, responseType: 'blob' }),
+
   // ── Nhập điểm (lv2 + admin) ──────────────────────────────────────────
   getGradesByCourse: (courseId, className)   => client.get('/academic/grades/by-course', { params: { courseId, className } }),
   updateGrade:       (enrollmentId, data)    => client.put(`/academic/grades/${enrollmentId}`, data),

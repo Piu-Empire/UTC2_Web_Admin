@@ -41,23 +41,23 @@ function statusLabel(status) {
 
 // ── Form thêm thủ công ────────────────────────────────────────────────
 function AddWarningForm({ onDone }) {
-  const [form, setForm] = useState({ userId: '', semesterId: '', warningType: 'LOW_GPA', description: '' });
+  const [form, setForm] = useState({ studentCode: '', semesterId: '', warningType: 'LOW_GPA', description: '' });
   const [saving, setSaving] = useState(false);
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
 
   async function handleSubmit() {
-    if (!form.userId || !form.semesterId) return alert('Nhập đủ User ID và Semester ID');
+    if (!form.studentCode || !form.semesterId) return alert('Nhập đủ MSSV và Semester ID');
     setSaving(true);
     try {
       await academicApi.upsertWarning({
-        userId: Number(form.userId),
+        studentCode: form.studentCode.trim(),
         semesterId: Number(form.semesterId),
         warningType: form.warningType,
         description: form.description || null,
         status: 'pending',
       });
-      setForm({ userId: '', semesterId: '', warningType: 'LOW_GPA', description: '' });
+      setForm({ studentCode: '', semesterId: '', warningType: 'LOW_GPA', description: '' });
       onDone();
     } catch (e) { alert('Lỗi: ' + (e?.response?.data?.message ?? e.message)); }
     finally { setSaving(false); }
@@ -68,8 +68,8 @@ function AddWarningForm({ onDone }) {
       <p className="text-sm font-medium text-ink">Thêm cảnh báo thủ công</p>
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs text-ink-subtle mb-1 block">User ID sinh viên *</label>
-          <input value={form.userId} onChange={e => set('userId', e.target.value)} placeholder="VD: 1001" className={INPUT}/>
+          <label className="text-xs text-ink-subtle mb-1 block">MSSV sinh viên *</label>
+          <input value={form.studentCode} onChange={e => set('studentCode', e.target.value)} placeholder="VD: 60510..." className={INPUT}/>
         </div>
         <div>
           <label className="text-xs text-ink-subtle mb-1 block">Semester ID *</label>
@@ -98,48 +98,36 @@ function AddWarningForm({ onDone }) {
   );
 }
 
-// ── Import file ───────────────────────────────────────────────────────
-function ImportWarningSection({ onDone }) {
-  const fileRef = useRef();
-  const [file, setFile]         = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [result, setResult]     = useState(null);
+// ── Export file ───────────────────────────────────────────────────────
+function ExportWarningSection() {
+  const [downloading, setDownloading] = useState(false);
+  const [mssv, setMssv] = useState('');
 
-  async function handleUpload() {
-    if (!file) return;
-    setUploading(true); setResult(null);
+  async function handleExport() {
+    setDownloading(true);
     try {
-      const res = await uploadImportWarnings(file, true);
-      setResult(res); setFile(null); onDone();
+      const res = await academicApi.exportWarnings(mssv.trim() || undefined, undefined);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'warnings.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     } catch (e) { alert('Lỗi: ' + (e?.response?.data?.message ?? e.message)); }
-    finally { setUploading(false); }
+    finally { setDownloading(false); }
   }
 
   return (
     <div className="card p-4 space-y-3">
-      <p className="text-sm font-medium text-ink">Import file cảnh báo</p>
-      <p className="text-xs text-ink-subtle">
-        File Excel/CSV, header ở dòng 1. Cột bắt buộc: <code className="bg-slate-100 px-1 rounded">student_code</code>, <code className="bg-slate-100 px-1 rounded">warning_type</code>, <code className="bg-slate-100 px-1 rounded">semester_id</code>. Tuỳ chọn: <code className="bg-slate-100 px-1 rounded">description</code>
-      </p>
+      <p className="text-sm font-medium text-ink">Xuất file Excel/CSV cảnh báo học vụ</p>
       <div className="flex items-center gap-3">
-        <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden"
-          onChange={e => setFile(e.target.files?.[0] ?? null)}/>
-        <button onClick={() => fileRef.current?.click()}
-          className="px-3 py-2 border border-surface-border rounded-lg text-sm text-ink-subtle hover:bg-slate-50 transition-colors">
-          {file ? file.name : 'Chọn file...'}
+        <input value={mssv} onChange={e => setMssv(e.target.value)} placeholder="Nhập MSSV (để trống nếu muốn xuất tất cả)" className={`${INPUT} max-w-sm`}/>
+        <button onClick={handleExport} disabled={downloading}
+          className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors">
+          <Upload size={14} className="rotate-180" /> {downloading ? 'Đang tải...' : 'Xuất dữ liệu'}
         </button>
-        {file && (
-          <button onClick={handleUpload} disabled={uploading}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-medium transition-colors">
-            <Upload size={14}/> {uploading ? 'Đang tải...' : 'Tải lên'}
-          </button>
-        )}
       </div>
-      {result && (
-        <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-          ✓ Thành công: {result.success} dòng{result.failed > 0 ? ` | Lỗi: ${result.failed} dòng` : ''}
-        </div>
-      )}
     </div>
   );
 }
@@ -230,11 +218,11 @@ export default function WarningPage() {
         <p className="text-sm text-ink-subtle mt-0.5">Quản lý cảnh báo học vụ sinh viên</p>
       </div>
 
-      {/* Thêm/import — lv3+ và advisor */}
+      {/* Thêm/export — lv3+ và advisor */}
       {canAdd(role, lv) && (
         <div className="space-y-3">
           <AddWarningForm onDone={refresh}/>
-          <ImportWarningSection onDone={refresh}/>
+          <ExportWarningSection />
         </div>
       )}
 
