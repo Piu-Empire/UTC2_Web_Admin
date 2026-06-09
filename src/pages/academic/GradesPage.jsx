@@ -2,7 +2,7 @@
 // Giảng viên (STAFF lv2): chọn môn → chọn lớp → xem + nhập điểm cả lớp
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ClipboardList, Pencil, Check, X, Upload, Download, Search } from 'lucide-react';
+import { ArrowLeft, ClipboardList, Pencil, Check, X, Download, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Badge      from '../../components/common/Badge';
 import EmptyState from '../../components/common/EmptyState';
@@ -21,7 +21,7 @@ function gradeVariant(letter) {
 }
 
 // ── Inline edit row ────────────────────────────────────────────────────────
-function GradeRow({ grade, onSaved }) {
+function GradeRow({ grade, onSaved, readOnly = false }) {
   const [editing, setEditing] = useState(false);
   const [saving,  setSaving]  = useState(false);
   const [form, setForm] = useState({
@@ -100,110 +100,14 @@ function GradeRow({ grade, onSaved }) {
   );
 }
 
-// ── Import Excel modal ─────────────────────────────────────────────────────
-function ImportModal({ onClose, onImported }) {
-  const [file, setFile]         = useState(null);
-  const [preview, setPreview]   = useState([]);
-  const [importing, setImporting] = useState(false);
-  const [result, setResult]     = useState(null);
-
-  function handleFile(e) {
-    const f = e.target.files[0];
-    if (!f) return;
-    setFile(f);
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const wb = XLSX.read(ev.target.result, { type: 'binary' });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      setPreview(rows.slice(0, 5));
-    };
-    reader.readAsBinaryString(f);
-  }
-
-  async function handleImport() {
-    if (!file) return;
-    setImporting(true);
-    const reader = new FileReader();
-    reader.onload = async ev => {
-      const wb   = XLSX.read(ev.target.result, { type: 'binary' });
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-      let ok = 0, fail = 0;
-      for (const row of rows) {
-        try {
-          const id = row['enrollmentId'] ?? row['enrollment_id'];
-          if (!id) { fail++; continue; }
-          await academicApi.updateGrade(Number(id), {
-            midtermScore:    row['midtermScore']    ?? row['Giữa kỳ']  ?? null,
-            finalScore:      row['finalScore']      ?? row['Cuối kỳ']  ?? null,
-            assignmentScore: row['assignmentScore'] ?? row['BT']       ?? null,
-          });
-          ok++;
-        } catch { fail++; }
-      }
-      setResult({ ok, fail });
-      setImporting(false);
-      if (ok > 0) onImported();
-    };
-    reader.readAsBinaryString(file);
-  }
-
-  function downloadTemplate() {
-    const ws = XLSX.utils.json_to_sheet([
-      { enrollmentId: 1, midtermScore: 8.0, finalScore: 8.5, assignmentScore: 9.0 },
-    ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Điểm');
-    XLSX.writeFile(wb, 'template-nhap-diem.xlsx');
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-2xl w-[520px] max-h-[80vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-surface-border flex items-center justify-between">
-          <h2 className="font-semibold text-ink">Import điểm từ Excel</h2>
-          <button onClick={onClose} className="p-1.5 rounded hover:bg-surface-hover text-ink-subtle"><X size={16}/></button>
-        </div>
-        <div className="p-6 space-y-4">
-          <div className="rounded-lg bg-slate-50 border border-surface-border p-4">
-            <p className="text-sm font-medium text-ink mb-1">Định dạng file</p>
-            <p className="text-xs text-ink-subtle mb-2">Cột bắt buộc: <code className="bg-white px-1 rounded border">enrollmentId</code> — lấy từ Export danh sách lớp</p>
-            <button onClick={downloadTemplate} className="text-xs text-brand-600 hover:underline font-medium">Tải file mẫu</button>
-          </div>
-          <label className="flex flex-col items-center justify-center border-2 border-dashed border-surface-border rounded-lg p-6 cursor-pointer hover:border-brand-400 transition-colors">
-            <Upload size={24} className="text-ink-subtle mb-2"/>
-            <span className="text-sm text-ink-subtle">{file ? file.name : 'Chọn file Excel (.xlsx)'}</span>
-            <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFile}/>
-          </label>
-          {preview.length > 0 && (
-            <div className="overflow-x-auto">
-              <p className="text-xs text-ink-subtle mb-1">Xem trước (5 dòng):</p>
-              <table className="w-full text-xs border border-surface-border rounded">
-                <thead className="bg-slate-50"><tr>{Object.keys(preview[0]).map(k => <th key={k} className="px-2 py-1.5 text-left font-medium border-b border-surface-border">{k}</th>)}</tr></thead>
-                <tbody>{preview.map((row, i) => <tr key={i} className="border-b last:border-0">{Object.values(row).map((v, j) => <td key={j} className="px-2 py-1.5">{String(v)}</td>)}</tr>)}</tbody>
-              </table>
-            </div>
-          )}
-          {result && (
-            <div className={`rounded-lg p-3 text-sm ${result.fail === 0 ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>
-              ✓ Thành công: {result.ok} {result.fail > 0 && `· ✗ Lỗi: ${result.fail}`}
-            </div>
-          )}
-        </div>
-        <div className="px-6 py-4 border-t border-surface-border flex justify-end gap-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm border border-surface-border rounded-lg hover:bg-surface-hover transition-colors">{result ? 'Đóng' : 'Huỷ'}</button>
-          {!result && <button onClick={handleImport} disabled={!file || importing}
-            className="px-4 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 disabled:opacity-50 font-medium transition-colors">
-            {importing ? 'Đang import...' : 'Import'}
-          </button>}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ── Main page ──────────────────────────────────────────────────────────────
 export default function GradesPage() {
   const navigate = useNavigate();
+  // lv2 (giảng viên): được nhập điểm; lv3+ và admin: chỉ xem
+  const user = (() => { try { return JSON.parse(localStorage.getItem('utc2_user')||'{}'); } catch { return {}; } })();
+  const isReadOnly = user.role === 'ADMIN'
+    ? false
+    : !(user.role === 'STAFF' && user.staffLevel === 2);
 
   const [courseId,   setCourseId]   = useState('');
   const [className,  setClassName]  = useState('');
@@ -212,7 +116,6 @@ export default function GradesPage() {
   const [grades,     setGrades]     = useState([]);
   const [loading,    setLoading]    = useState(false);
   const [searched,   setSearched]   = useState(false);
-  const [showImport, setShowImport] = useState(false);
 
   // Lấy danh sách môn học từ server (dùng enrollment API hiện có)
   useEffect(() => {
@@ -294,10 +197,6 @@ export default function GradesPage() {
         </button>
         {grades.length > 0 && (
           <>
-            <button onClick={() => setShowImport(true)}
-              className="flex items-center gap-2 px-3 py-2 text-sm bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium transition-colors ml-auto">
-              <Upload size={15}/> Import Excel
-            </button>
             <button onClick={handleExport}
               className="flex items-center gap-2 px-3 py-2 text-sm border border-surface-border rounded-lg hover:bg-surface-hover transition-colors">
               <Download size={15}/> Export
@@ -335,7 +234,7 @@ export default function GradesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-border">
-                {grades.map(g => <GradeRow key={g.enrollmentId} grade={g} onSaved={handleSaved}/>)}
+                {grades.map(g => <GradeRow key={g.enrollmentId} grade={g} onSaved={handleSaved} readOnly={isReadOnly}/>)}
               </tbody>
             </table>
           </div>
@@ -345,10 +244,6 @@ export default function GradesPage() {
           </div>
         )}
       </div>
-
-      {showImport && (
-        <ImportModal onClose={() => setShowImport(false)} onImported={() => { setShowImport(false); handleSearch(); }}/>
-      )}
     </div>
   );
 }

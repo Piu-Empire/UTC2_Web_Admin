@@ -2,138 +2,149 @@ import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { exportEnrollments, exportDormitory } from '../../api/exportApi';
 import {
-  LayoutDashboard, Users, Trophy, Upload, BookOpen, ClipboardList,
-  CalendarDays, Wallet, GraduationCap, Bell, MessageSquare,
-  ClipboardCheck, ChevronLeft, ChevronRight, LogOut, BarChart2,
-  Star, Building2, Award, ShieldAlert, UserCircle, Download
+  LayoutDashboard,
+  Users,
+  Trophy,
+  Upload,
+  BookOpen,
+  ClipboardList,
+  CalendarDays,
+  Wallet,
+  GraduationCap,
+  Bell,
+  MessageSquare,
+  ClipboardCheck,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  BarChart2,
+  Award,
+  ShieldAlert,
+  Star,
+  Pencil,
+  CheckSquare,
+  Building2,
+  UserCircle,
+  Download,
 } from 'lucide-react';
-
-// ─── Permission helpers ───────────────────────────────────────────────────────
 
 function getUser() {
   try { return JSON.parse(localStorage.getItem('utc2_user') || '{}'); }
   catch { return {}; }
 }
 
-function canSee(section, role, staffLevel) {
-  if (role === 'ADMIN') return true;
+function buildNavGroups(role, staffLevel) {
+  const isAdmin   = role === 'ADMIN';
+  const isAdvisor = role === 'ADVISOR';
+  const isStaff   = role === 'STAFF';
+  const lv        = staffLevel ?? 0;
 
-  switch (section) {
-    case 'dashboard':
-      if (role === 'ADVISOR') return true;
-      if (role === 'STAFF' && staffLevel >= 2) return true;
-      return false;
+  const groups = [];
 
-    case 'assessment':
-      if (role === 'ADVISOR') return true;
-      if (role === 'STAFF') return true;
-      return false;
-
-    case 'academic_results':
-      if (role === 'STAFF' && staffLevel >= 2) return true;
-      return false;
-
-    case 'academic_advanced':
-      if (role === 'ADVISOR') return true;
-      if (role === 'STAFF' && staffLevel >= 3) return true;
-      return false;
-
-    case 'lv5':
-      // lv5 restricted chỉ thấy section riêng, không thấy section lv5 chung
-      if (role === 'STAFF' && staffLevel === 5) return false;
-      if (role === 'STAFF' && staffLevel >= 5) return true;
-      return false;
-
-    case 'lv5_restricted':
-      if (role === 'STAFF' && staffLevel === 5) return true;
-      return false;
-
-    default:
-      return false;
-  }
-}
-
-// ─── Nav config ───────────────────────────────────────────────────────────────
-
-const NAV_GROUPS = [
-  {
+  // ── Main ──────────────────────────────────────────────────────────────
+  groups.push({
     label: 'Main',
-    section: 'dashboard',
-    items: [
-      { to: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true },
-    ],
-  },
-  {
-    label: 'Kết quả học tập',
-    section: 'academic_results',
-    items: [
-      { to: '/academic/results', icon: BarChart2, label: 'Kết quả' },
-    ],
-  },
-  {
-    label: 'Học thuật',
-    section: 'academic_advanced',
-    items: [
-      { to: '/academic/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' },
-      { to: '/academic/scholarships', icon: Award, label: 'Học bổng' },
-      { to: '/academic/warnings', icon: ShieldAlert, label: 'Cảnh báo học vụ' },
-    ],
-  },
-  {
-    label: 'Ký túc xá',
-    section: 'assessment',
-    items: [
-      { to: '/dormitory/registrations', icon: Building2, label: 'Duyệt đăng ký KTX' },
-    ],
-  },
-  {
-    items: [
-      { to: '/assessment', icon: Star, label: 'Đánh giá rèn luyện' },
-    ],
-  },
-  {
-    label: 'Sinh viên',
-    section: 'lv5',
-    items: [
-      { to: '/students', icon: Users, label: 'Sinh viên' },
-      { to: '/schedules', icon: CalendarDays, label: 'Thời khóa biểu' },
-    ],
-  },
-  {
-    label: 'Import',
-    section: 'lv5',
-    items: [
-      { to: '/import/students', icon: Upload, label: 'Sinh viên' },
-      { to: '/import/profiles', icon: UserCircle, label: 'Hồ sơ sinh viên' },
-      { to: '/import/courses', icon: BookOpen, label: 'Học phần' },
-      { to: '/import/enrollments', icon: ClipboardList, label: 'Đăng ký & Điểm' },
-      { to: '/import/fees', icon: Wallet, label: 'Học phí' },
-      { to: '/import/curriculum', icon: GraduationCap, label: 'Chương trình ĐT' },
-      { to: '/import/dormitory', icon: Building2, label: 'Ký túc xá' },
-    ],
-  },
-  {
-    label: 'Tiện ích',
-    section: 'lv5',
-    items: [
-      { to: '/academic', icon: BarChart2, label: 'Kết quả học tập' },
-      { to: '/assessment', icon: Star, label: 'Đánh giá rèn luyện' },
-      { to: '/notifications', icon: Bell, label: 'Thông báo' },
-      { to: '/feedback', icon: MessageSquare, label: 'Phản hồi' },
-      { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
-    ],
-  },
-  // ── STAFF level 5 restricted: chỉ thấy 3 nav items ──
-  {
-    label: 'Ký túc xá',
-    section: 'lv5_restricted',
-    items: [
-      { to: '/dormitory/registrations', icon: Building2, label: 'Duyệt đăng ký KTX' },
-      { to: '/import/dormitory', icon: Upload, label: 'Import KTX' },
-      { to: '/import/enrollments', icon: ClipboardList, label: 'Import Đăng ký học phần' },
-    ],
-  },
-];
+    items: [{ to: '/', icon: LayoutDashboard, label: 'Dashboard', exact: true }],
+  });
+
+  // ── Quản lý ───────────────────────────────────────────────────────────
+  const qlItems = [];
+  if (isAdmin || (isStaff && lv >= 5))
+    qlItems.push({ to: '/students', icon: Users, label: 'Sinh viên' });
+
+  if (isAdmin || (isStaff && lv >= 5))
+  qlItems.push({ to: '/schedules', icon: CalendarDays, label: 'Thời khóa biểu' });
+
+  if (isAdmin || (isStaff && lv >= 2))
+    qlItems.push({ to: '/academic/grades', icon: BarChart2, label: 'Kết quả học tập' });
+
+  if (isAdmin || (isStaff && lv >= 5))
+    qlItems.push({ to: '/academic/teacher-courses', icon: Users, label: 'Phân công giảng viên' });
+
+  if (isAdmin || (isStaff && lv >= 5))
+    qlItems.push({ to: '/academic/approval', icon: CheckSquare, label: 'Duyệt dữ liệu' });
+
+  if (isAdmin || isAdvisor || (isStaff && lv >= 3))
+    qlItems.push({ to: '/academic/leaderboard', icon: Trophy, label: 'Bảng xếp hạng' });
+
+  if (isAdmin || (isStaff && lv >= 3)) {
+    qlItems.push({ to: '/academic/scholarships', icon: Award,       label: 'Học bổng'         });
+    qlItems.push({ to: '/academic/warnings',     icon: ShieldAlert, label: 'Cảnh báo học vụ' });
+  }
+  if (isAdvisor) {
+    qlItems.push({ to: '/academic/advisor/scholarships', icon: Award,       label: 'Học bổng'         });
+    qlItems.push({ to: '/academic/advisor/warnings',     icon: ShieldAlert, label: 'Cảnh báo học vụ' });
+  }
+
+  // Đánh giá rèn luyện: admin + advisor + lv1, lv3, lv4, lv5 (không lv2, không null)
+  if (isAdmin || isAdvisor || (isStaff && (lv === 1 || lv >= 3)))
+    qlItems.push({ to: '/assessment', icon: Star, label: 'Đánh giá rèn luyện' });
+
+  if (qlItems.length > 0)
+    groups.push({ label: 'Quản lý', items: qlItems });
+
+  // ── Import ─────────────────────────────────────────────────────────────
+  if (isAdmin || (isStaff && lv >= 5) || (isStaff && lv === 2)) {
+    const importItems = [];
+    if (isAdmin || (isStaff && lv >= 5)) {
+      importItems.push({ to: '/import/students',    icon: Upload,        label: 'Sinh viên'        });
+      importItems.push({ to: '/import/courses',     icon: BookOpen,      label: 'Học phần'         });
+      importItems.push({ to: '/import/enrollments', icon: ClipboardList, label: 'Đăng ký'          });
+    }
+    if (isAdmin || (isStaff && lv >= 5))
+      importItems.push({
+        to: '/import/profiles',
+        icon: UserCircle,
+        label: 'Hồ sơ sinh viên',
+      });
+
+    if (isAdmin || (isStaff && lv === 2))
+      importItems.push({ to: '/import/grades',          icon: Pencil, label: 'Điểm'                  });
+    if (isAdmin || (isStaff && lv >= 5))
+      importItems.push({ to: '/import/teacher-courses', icon: Users,  label: 'Phân công giảng viên' });
+    if (isAdmin || (isStaff && lv >= 5)) {
+      importItems.push({ to: '/import/schedules',  icon: CalendarDays,  label: 'Thời khóa biểu'  });
+      importItems.push({ to: '/import/fees',       icon: Wallet,        label: 'Học phí'          });
+      importItems.push({ to: '/import/curriculum', icon: GraduationCap, label: 'Chương trình ĐT' });
+    }
+    
+    if (isAdmin || (isStaff && lv >= 5))
+      importItems.push({
+        to: '/import/dormitory',
+        icon: Building2,
+        label: 'Ký túc xá',
+      });
+    if (importItems.length > 0)
+      groups.push({ label: 'Import', items: importItems });
+
+  }
+  // ── Ký túc xá ──────────────────────────────────────────────────────────
+  if (isAdmin || isAdvisor || (isStaff && lv >= 1)) {
+    groups.push({
+      label: 'Ký túc xá',
+      items: [
+        {
+          to: '/dormitory/registrations',
+          icon: Building2,
+          label: 'Duyệt đăng ký KTX',
+        },
+      ],
+    });
+  }
+  // ── Tiện ích ───────────────────────────────────────────────────────────
+  if (isAdmin || (isStaff && lv >= 5)) {
+    groups.push({
+      label: 'Tiện ích',
+      items: [
+        { to: '/notifications',    icon: Bell,           label: 'Thông báo'        },
+        { to: '/feedback',         icon: MessageSquare,  label: 'Phản hồi'         },
+        { to: '/service-requests', icon: ClipboardCheck, label: 'Yêu cầu dịch vụ' },
+      ],
+    });
+  }
+
+  return groups;
+}
 
 function handleLogout() {
   localStorage.removeItem('utc2_token');
@@ -141,15 +152,13 @@ function handleLogout() {
   window.location.href = '/login';
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const user = getUser();
   const { role, staffLevel } = user;
 
-  const visibleGroups = NAV_GROUPS.filter(g => canSee(g.section, role, staffLevel));
+  const visibleGroups = buildNavGroups(role, staffLevel);
 
   // STAFF level 5: chỉ thấy xuất file KTX + học phần (không phải lv5 chung)
   const isLv5Restricted = role === 'STAFF' && staffLevel === 5;
@@ -157,11 +166,7 @@ export default function Sidebar() {
   const showExport = canSee('lv5', role, staffLevel) || isLv5Restricted;
 
   const initials = (user.name || 'A')
-    .split(' ')
-    .map(w => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+    .split(' ').map(w => w[0]).slice(-2).join('').toUpperCase();
 
   function roleLabel() {
     if (role === 'ADMIN') return 'Quản trị viên';
@@ -175,19 +180,26 @@ export default function Sidebar() {
 
   return (
     <aside
-      className={`
-        flex flex-col h-screen bg-white dark:bg-slate-900 border-r border-surface-border dark:border-slate-800
-        transition-all duration-300 ease-in-out flex-shrink-0
-        ${collapsed ? 'w-16' : 'w-60'}
-      `}
+      className={`flex flex-col h-screen flex-shrink-0 transition-all duration-300 ease-in-out ${collapsed ? 'w-16' : 'w-60'}`}
+      style={{
+        background: 'var(--sidebar-bg)',
+        borderRight: '1px solid var(--sidebar-border)',
+        boxShadow: '4px 0 24px rgba(0,0,0,0.06)',
+      }}
     >
-      {/* ── Logo ── */}
-      <div className="h-16 flex items-center border-b border-surface-border dark:border-slate-800 px-3 gap-3 overflow-hidden">
-        <div className="w-8 h-8 rounded-lg bg-brand-700 flex items-center justify-center flex-shrink-0">
+      {/* Logo */}
+      <div
+        className={`h-16 flex items-center px-3 gap-3 overflow-hidden flex-shrink-0`}
+        style={{ borderBottom: '1px solid var(--sidebar-border)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ background: 'var(--logo-bg)', boxShadow: 'var(--logo-shadow)' }}
+        >
           <span className="font-display font-bold text-white text-[18px] leading-none">U</span>
         </div>
         {!collapsed && (
-          <span className="font-display font-bold text-ink text-[15px] whitespace-nowrap">
+          <span className="font-display font-bold text-[15px] whitespace-nowrap text-gold">
             UTC2 Admin
           </span>
         )}
@@ -198,7 +210,10 @@ export default function Sidebar() {
         {visibleGroups.map(group => (
           <div key={group.label}>
             {!collapsed && (
-              <p className="text-[10px] uppercase tracking-widest text-ink-subtle px-3 mb-1 font-body">
+              <p
+                className="text-[10px] uppercase tracking-widest px-3 mb-1 font-body"
+                style={{ color: 'var(--section-label)' }}
+              >
                 {group.label}
               </p>
             )}
@@ -215,7 +230,8 @@ export default function Sidebar() {
                 >
                   <Icon
                     size={18}
-                    className={`nav-icon flex-shrink-0 ${isActive ? 'text-brand-600' : 'text-ink-subtle'}`}
+                    className="nav-icon flex-shrink-0"
+                    style={{ color: isActive ? 'var(--nav-active-color)' : 'var(--nav-color)' }}
                   />
                   {!collapsed && <span className="truncate">{label}</span>}
                 </NavLink>
@@ -252,30 +268,33 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* ── Bottom: user row + collapse button ── */}
-      <div className="border-t border-surface-border dark:border-slate-800">
-        <div
-          className={`
-            h-14 flex items-center gap-3 px-3 overflow-hidden
-            ${collapsed ? 'justify-center' : ''}
-          `}
-        >
-          <div className="w-8 h-8 rounded-full bg-brand-100 flex items-center justify-center flex-shrink-0">
-            <span className="font-display font-semibold text-brand-700 text-xs">{initials}</span>
+      {/* User + collapse */}
+      <div style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+        <div className={`h-14 flex items-center gap-3 px-3 overflow-hidden ${collapsed ? 'justify-center' : ''}`}>
+          <div
+            className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
+            style={{ background: 'var(--avatar-bg)', border: '1px solid var(--avatar-border)' }}
+          >
+            <span className="font-display font-semibold text-xs" style={{ color: 'var(--avatar-color)' }}>
+              {initials}
+            </span>
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-ink truncate leading-tight">
+              <p className="text-sm font-medium truncate leading-tight" style={{ color: 'var(--text-primary)' }}>
                 {user.name || 'Admin'}
               </p>
-              <p className="text-xs text-ink-subtle truncate">{roleLabel()}</p>
+              <p className="text-xs truncate" style={{ color: 'var(--text-subtle)' }}>{roleLabel()}</p>
             </div>
           )}
           {!collapsed && (
             <button
               onClick={handleLogout}
               title="Đăng xuất"
-              className="p-1.5 rounded-lg hover:bg-surface-hover text-ink-subtle hover:text-ink transition-colors"
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: 'var(--text-subtle)' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'var(--gold-primary)'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--text-subtle)'}
             >
               <LogOut size={15} />
             </button>
@@ -284,11 +303,10 @@ export default function Sidebar() {
 
         <button
           onClick={() => setCollapsed(c => !c)}
-          className="
-            w-full h-9 flex items-center justify-center
-            text-ink-subtle hover:text-ink hover:bg-surface-hover
-            transition-colors border-t border-surface-border dark:border-slate-800
-          "
+          className="w-full h-9 flex items-center justify-center transition-colors"
+          style={{ borderTop: '1px solid var(--sidebar-border)', color: 'var(--text-subtle)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--nav-hover-bg)'; e.currentTarget.style.color = 'var(--gold-primary)'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-subtle)'; }}
           title={collapsed ? 'Mở rộng' : 'Thu gọn'}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}

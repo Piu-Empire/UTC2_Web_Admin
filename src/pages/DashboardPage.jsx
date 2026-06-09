@@ -29,7 +29,10 @@ function canSee(section, role, staffLevel) {
     case 'academic':
       return role === 'ADVISOR' || (role === 'STAFF' && staffLevel >= 2);
     case 'assessment':
-      return role === 'ADVISOR' || (role === 'STAFF' && staffLevel >= 3);
+      // advisor + lv1, lv3, lv4, lv5 (không lv2, không null)
+      if (role === 'ADVISOR') return true;
+      if (role === 'STAFF' && (staffLevel === 1 || staffLevel >= 3)) return true;
+      return false;
     case 'lv5':
       return role === 'STAFF' && staffLevel >= 5;
     default:
@@ -105,10 +108,19 @@ export default function DashboardPage() {
   const showAssessment = canSee('assessment', role, staffLevel);
   const showLv5        = canSee('lv5',        role, staffLevel);
 
-  // Lv2 chỉ thấy kết quả học tập — ẩn học bổng/bảng xếp hạng/cảnh báo
-  const academicItems = (role === 'STAFF' && staffLevel === 2)
-    ? ACADEMIC_SHORTCUTS.slice(0, 1)   // chỉ "Kết quả học tập"
-    : ACADEMIC_SHORTCUTS;              // lv3+ và advisor thấy hết
+  const academicItems =
+    role === 'ADVISOR'
+      // Advisor: leaderboard xem, warning + scholarship dùng advisor routes
+      ? [
+          { to: '/academic/leaderboard',          Icon: Trophy,      title: 'Bảng xếp hạng',   sub: 'Top sinh viên GPA cao' },
+          { to: '/academic/advisor/warnings',     Icon: ShieldAlert, title: 'Cảnh báo học vụ', sub: 'Quản lý cảnh báo sinh viên' },
+          { to: '/academic/advisor/scholarships', Icon: Award,       title: 'Học bổng',         sub: 'Cập nhật trạng thái học bổng' },
+        ]
+      : (role === 'STAFF' && staffLevel === 2)
+      // Giảng viên lv2: chỉ kết quả học tập (trang grades, có nút edit)
+      ? [{ to: '/academic/grades', Icon: BarChart2, title: 'Kết quả học tập', sub: 'Xem và nhập điểm theo môn' }]
+      // lv3+ và admin: đầy đủ
+      : ACADEMIC_SHORTCUTS;
 
   const [stats,    setStats]    = useState({ totalStudents: 0, unreadNotifs: 0, pendingFeedback: 0, pendingRequests: 0 });
   const [feedbacks,  setFeedbacks]  = useState([]);
@@ -122,8 +134,8 @@ export default function DashboardPage() {
       try {
         const [svRes, fbRes, srRes] = await Promise.allSettled([
           studentApi.list({ page: 0, size: 1 }),
-          feedbackApi.list({ status: 'chưa đọc', page: 0, size: 5 }),
-          serviceRequestApi.list({ status: 'chờ xử lý', page: 0, size: 5 }),
+          feedbackApi.list({ status: 'UNREAD', page: 0, size: 5 }),
+          serviceRequestApi.list({ status: 'PENDING', page: 0, size: 5 }),
         ]);
         const svData = svRes.status === 'fulfilled' ? (svRes.value?.data?.data ?? svRes.value?.data) : null;
         const totalStudents = svData?.totalElements ?? svData?.total ?? 0;

@@ -30,10 +30,30 @@ import ScholarshipPage         from '../pages/academic/ScholarshipPage';
 import WarningPage             from '../pages/academic/WarningPage';
 import AdvisorWarningPage      from '../pages/academic/AdvisorWarningPage';
 import AdvisorScholarshipPage  from '../pages/academic/AdvisorScholarshipPage';
+import ImportGradesPage        from '../pages/import/ImportGradesPage';
+import ImportTeacherCoursePage  from '../pages/import/ImportTeacherCoursePage';
+import TeacherCoursePage        from '../pages/academic/TeacherCoursePage';
+import ApprovalPage from "../pages/academic/ApprovalPage";
+// Assessment
 import AssessmentPage          from '../pages/assessment/AssessmentPage';
+
+function getUser() {
+  try { return JSON.parse(localStorage.getItem('utc2_user') || '{}'); }
+  catch { return {}; }
+}
+
 function RequireAuth({ children }) {
   const token = localStorage.getItem('utc2_token');
   if (!token) return <Navigate to="/login" replace />;
+  return children;
+}
+
+function RequireServiceRequestAccess({ children }) {
+  const token = localStorage.getItem('utc2_token');
+  if (!token) return <Navigate to="/login" replace />;
+  const { role, staffLevel } = getUser();
+  const allowed = role === 'ADMIN' || (role === 'STAFF' && staffLevel >= 5);
+  if (!allowed) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -42,23 +62,22 @@ export default function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+
         <Route path="/" element={<RequireAuth><AppLayout /></RequireAuth>}>
           <Route index element={<DashboardPage />} />
 
           <Route path="import">
-            <Route path="students"    element={<ImportStudentPage />} />
-            <Route path="courses"     element={<ImportCoursePage />} />
+            <Route path="students" element={<ImportStudentPage />} />
+            <Route path="courses" element={<ImportCoursePage />} />
             <Route path="enrollments" element={<ImportEnrollmentPage />} />
-            <Route path="fees"        element={<ImportFeePage />} />
-            <Route path="curriculum"  element={<ImportCurriculumPage />} />
-            <Route path="profiles"    element={<ImportProfilePage />} />
-            <Route path="dormitory"   element={<ImportDormitoryPage />} />
+            <Route path="fees" element={<ImportFeePage />} />
+            <Route path="curriculum" element={<ImportCurriculumPage />} />
+            <Route path="profiles" element={<ImportProfilePage />} />
 
-          </Route>
+            <Route path="dormitory" element={<ImportDormitoryPage />} />
 
-          <Route path="students">
-            <Route index element={<StudentListPage />} />
-            <Route path=":id" element={<StudentDetailPage />} />
+            <Route path="grades" element={<ImportGradesPage />} />
+            <Route path="teacher-courses" element={<ImportTeacherCoursePage />} />
           </Route>
 
           <Route path="schedules">
@@ -70,27 +89,41 @@ export default function AppRouter() {
           </Route>
 
           <Route path="academic">
-            {/* ADMIN / xem tổng quan */}
             <Route path="results"      element={<AcademicResultPage />} />
+            <Route path="grades"       element={<GradesPage />} />
             <Route path="leaderboard"  element={<LeaderboardPage />} />
             <Route path="scholarships" element={<ScholarshipPage />} />
             <Route path="warnings"     element={<WarningPage />} />
-
-            {/* STAFF lv2: nhập điểm theo môn */}
-            <Route path="grades"       element={<GradesPage />} />
-
-            {/* ADVISOR: quản lý warning + scholarship */}
             <Route path="advisor/warnings"     element={<AdvisorWarningPage />} />
             <Route path="advisor/scholarships" element={<AdvisorScholarshipPage />} />
+            <Route path="advisor/leaderboard"   element={<LeaderboardPage />} />
+            <Route path="teacher-courses"        element={<TeacherCoursePage />} />
+            <Route path="approval"               element={<ApprovalPage />} />
           </Route>
-          <Route path="assessment"       element={<AssessmentPage />} />
-          <Route path="notifications"    element={<NotificationPage />} />
-          <Route path="feedback"         element={<FeedbackPage />} />
-          <Route path="service-requests" element={<ServiceRequestPage />} />
+                    <Route path="assessment" element={<AssessmentPage />} />
+
+          <Route path="notifications" element={<NotificationPage />} />
+
+          <Route path="feedback" element={<FeedbackPage />} />
+
+          <Route
+            path="service-requests"
+            element={
+              <RequireServiceRequestAccess>
+                <ServiceRequestPage />
+              </RequireServiceRequestAccess>
+            }
+          />
+
           <Route path="dormitory">
-            <Route path="registrations" element={<DormitoryRegistrationPage />} />
+            <Route
+              path="registrations"
+              element={<DormitoryRegistrationPage />}
+            />
           </Route>
+
         </Route>
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
