@@ -27,6 +27,7 @@ const EMPTY_PARSE = {
  *   requiredCols: string[],
  *   sampleUrl?:   string,
  *   viewDataPath: string,          // navigate target after import
+ *   headerRow?:   number,          // which row (0-indexed) contains headers (default: auto-detect / 7 for TKB)
  * }} props
  */
 export default function GenericImportPage({
@@ -36,6 +37,7 @@ export default function GenericImportPage({
   requiredCols,
   sampleUrl,
   viewDataPath,
+  headerRow,
 }) {
   const navigate = useNavigate();
 
@@ -50,7 +52,7 @@ export default function GenericImportPage({
   useEffect(() => {
     if (!file) { setParsed(EMPTY_PARSE); return; }
     setParsing(true);
-    parseExcelFile(file, requiredCols)
+    parseExcelFile(file, requiredCols, headerRow ?? null)
       .then(p => setParsed(p))
       .finally(() => setParsing(false));
   }, [file]); // eslint-disable-line react-hooks/exhaustive-deps

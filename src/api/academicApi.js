@@ -12,17 +12,13 @@ export const academicApi = {
   getGradesByCourse: (courseId, className)   => client.get('/academic/grades/by-course', { params: { courseId, className } }),
   updateGrade:       (enrollmentId, data)    => client.put(`/academic/grades/${enrollmentId}`, data),
 
-  // ── Advisor + lv5: import warning & scholarship ───────────────────────
+  // ── lv3+ / Advisor: tạo warning & scholarship ───────────────────────
   upsertWarning:           (data)            => client.post('/academic/warnings',           data),
   deleteWarning:           (warningId)       => client.delete(`/academic/warnings/${warningId}`),
+  upsertScholarship:       (data)            => client.put('/academic/scholarships/status', data),
   updateScholarshipStatus: (data)            => client.put('/academic/scholarships/status', data),
 
   // ── lv5 + admin: duyệt ───────────────────────────────────────────────
-  // Leaderboard
-  approveLeaderboard:  (semesterId)          => client.post('/academic/leaderboard/approve',  null, { params: { semesterId } }),
-  revokeLeaderboard:   (semesterId)          => client.delete('/academic/leaderboard/approve',      { params: { semesterId } }),
-  getPendingLeaderboard:(semesterId, academicYear) => client.get('/academic/leaderboard/pending', { params: { semesterId, academicYear } }),
-
   // Warning
   approveWarning:      (warningId)           => client.post(`/academic/warnings/${warningId}/approve`),
   getPendingWarnings:  ()                    => client.get('/academic/warnings/pending'),
@@ -31,6 +27,11 @@ export const academicApi = {
   approveScholarship:      (userId, scholarshipId) => client.post('/academic/scholarships/approve',  null, { params: { userId, scholarshipId } }),
   markScholarshipReceived: (userId, scholarshipId) => client.post('/academic/scholarships/received', null, { params: { userId, scholarshipId } }),
   getPendingScholarships:  ()                      => client.get('/academic/scholarships/pending'),
+
+  // Leaderboard (read only, không còn approve)
+  approveLeaderboard:   (semesterId)         => client.post('/academic/leaderboard/approve',  null, { params: { semesterId } }),
+  revokeLeaderboard:    (semesterId)         => client.delete('/academic/leaderboard/approve',      { params: { semesterId } }),
+  getPendingLeaderboard:(semesterId, academicYear) => client.get('/academic/leaderboard/pending', { params: { semesterId, academicYear } }),
 
   // ── Teacher course ────────────────────────────────────────────────────
   getTeacherCourses:   (userId)              => client.get('/academic/teacher-courses', { params: { userId } }),

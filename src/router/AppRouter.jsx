@@ -28,12 +28,9 @@ import GradesPage              from '../pages/academic/GradesPage';
 import LeaderboardPage         from '../pages/academic/LeaderboardPage';
 import ScholarshipPage         from '../pages/academic/ScholarshipPage';
 import WarningPage             from '../pages/academic/WarningPage';
-import AdvisorWarningPage      from '../pages/academic/AdvisorWarningPage';
-import AdvisorScholarshipPage  from '../pages/academic/AdvisorScholarshipPage';
 import ImportGradesPage        from '../pages/import/ImportGradesPage';
 import ImportTeacherCoursePage  from '../pages/import/ImportTeacherCoursePage';
 import TeacherCoursePage        from '../pages/academic/TeacherCoursePage';
-import ApprovalPage from "../pages/academic/ApprovalPage";
 // Assessment
 import AssessmentPage          from '../pages/assessment/AssessmentPage';
 
@@ -94,11 +91,7 @@ export default function AppRouter() {
             <Route path="leaderboard"  element={<LeaderboardPage />} />
             <Route path="scholarships" element={<ScholarshipPage />} />
             <Route path="warnings"     element={<WarningPage />} />
-            <Route path="advisor/warnings"     element={<AdvisorWarningPage />} />
-            <Route path="advisor/scholarships" element={<AdvisorScholarshipPage />} />
-            <Route path="advisor/leaderboard"   element={<LeaderboardPage />} />
-            <Route path="teacher-courses"        element={<TeacherCoursePage />} />
-            <Route path="approval"               element={<ApprovalPage />} />
+            <Route path="teacher-courses" element={<TeacherCoursePage />} />
           </Route>
                     <Route path="assessment" element={<AssessmentPage />} />
 
